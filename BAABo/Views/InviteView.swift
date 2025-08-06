@@ -16,7 +16,7 @@ struct Friend: Identifiable, Hashable {
     var imageName: String // 👈 각 친구의 미모지 이미지 이름
 }
 
-let foodList = ["고수", "회", "없음", "양고기", "없음", "우유", "피망", "없음", "땅콩", "없음"]
+let foodList = ["고수", "회", "없음", "양고기", "없음", "우유", "피망", "없음", "땅콩", "없음", "당근"]
 let memojiImages = ["memoji1", "memoji2", "memoji3", "memoji4", "memoji5", "memoji6"]
 
 // MARK: - 메인 뷰
