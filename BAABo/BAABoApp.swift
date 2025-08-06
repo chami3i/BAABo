@@ -11,7 +11,9 @@ import SwiftUI
 struct BAABoApp: App {
     var body: some Scene {
         WindowGroup {
-            MapView() // 이부분 수정!
+            // PlaceView() 
+            // MapView() // 이부분 수정!
+            ContentView()
         }
     }
 }
