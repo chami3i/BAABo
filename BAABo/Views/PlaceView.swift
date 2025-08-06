@@ -13,26 +13,51 @@ struct PlaceView: View {
     //        print("식당 선택 화면 생성")
     //    }
     
+    @State private var remainingTime: Int = 180
+    @State private var timerActive: Bool = true
+    
+    // 나의 선택 끝! 버튼 눌렀는지
+    @State private var selectedPlace: Bool = false
+    // 결과 페이지로 이동
+    @State private var moveToResultView: Bool = false
+    
+    // 타이머 생성
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
     var body: some View {
         
         NavigationView {
             ScrollView {
                 VStack (spacing: 20){
                     
-                    Text("식당 선택")
-                        .font(.largeTitle)
-                        .bold()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
+                    HStack {
+                        Text("식당 선택")
+                            .font(.largeTitle)
+                            .bold()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        Spacer()
+                        
+                        Image(systemName:   "timer.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.green)
+                            
+                        Text(timeString(from: remainingTime))
+                            .font(.title)
+                            .monospacedDigit()
+                            .foregroundColor(.green)
+                    }
+                    .padding(.horizontal)
+                    
                     
                     VStack(alignment: .leading, spacing: 20) {
                         
-                        NavigationLink(destination: Text("포항 순이 상세 페이지")) {
+                        NavigationLink(destination: Text("이미지 보는 걸로? 메뉴판?")) {
                             ImageCardView(imageName: "포항순이", title: "포항 순이", category: "일본식라멘",status: "영업 중", hours: "11:30 - 20:30",  rating: "5.0", destination:  { AnyView(Text("포항순이 상세 페이지"))} )
                         }
                         
                         NavigationLink(destination: Text("소노이에 상세 페이지")) {
-                            ImageCardView(imageName: "소노이에", title: "소노이에", category: "일식당",status: "영업 중", hours: "11:0    0 - 20:30", rating: "4.7", destination: {AnyView(Text("소노이에 상세 페이지"))} )
+                            ImageCardView(imageName: "소노이에", title: "소노이에", category: "일식당",status: "영업 중", hours: "11:00 - 20:30", rating: "4.7", destination: {AnyView(Text("소노이에 상세 페이지"))} )
                         }
                         
                         NavigationLink(destination: Text("효자동수우동 상세 페이지")) {
@@ -44,24 +69,44 @@ struct PlaceView: View {
                         }
                         
                         NavigationLink(destination: Text("소노이에 상세 페이지")) {
-                            ImageCardView(imageName: "소노이에", title: "소노이에", category: "일식당",status: "영업 중", hours: "11:0    0 - 20:30", rating: "4.7", destination: {AnyView(Text("소노이에 상세 페이지"))} )
+                            ImageCardView(imageName: "소노이에", title: "소노이에", category: "일식당",status: "영업 중", hours: "11:00 - 20:30", rating: "4.7", destination: {AnyView(Text("소노이에 상세 페이지"))} )
                         }
                         
                         NavigationLink(destination: Text("효자동수우동 상세 페이지")) {
                             ImageCardView(imageName: "효자동수우동", title: "효자동수우동", category: "우동, 소바",status: "영업 중", hours: "11:30 - 20:00", rating: "4.1", destination:  {AnyView(Text("효자동수우동 상세 페이지"))} )
                         }
+                    }
+                    HStack {
+                        Button("나의 선택 끝!") {
+                            selectedPlace = true
+                        }
+                            .font(.title)
+                            .bold()
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .padding()
+                            .background(Color.orange)
+                            .cornerRadius(20)
+                            //.disabled(!timerActive)
+                        
+                        Button("결과 보기") {
+                            // moveToResultView = true
+                        }
+                        .font(.title)
+                        .bold()
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .padding()
+                        .background(Color.orange)
+                        .cornerRadius(20)
+                        .disabled(timerActive)
                     }
                     
-                    Button("나의 선택 끝!"){
+                    if selectedPlace {
+                        Text("선택 완료! \(timeString(from: remainingTime)) 후 오늘의 식당이 공개됩니다!")
                     }
-                    .font(.title)
-                    .bold()
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .padding()
-                    .background(Color.orange)
-                    .cornerRadius(20)
                     
                     // Spacer()
                 }
@@ -70,8 +115,25 @@ struct PlaceView: View {
             }
             
         }
+        .onReceive(timer) { _ in
+            guard timerActive else { return }
+            if remainingTime > 0 {
+                remainingTime -= 1
+            } else {
+                timerActive = false
+                //moveToResultView() = true
+            }
+        }
     }
 }
+
+// 타이머 표시를 위한 함수
+func timeString(from seconds: Int) -> String {
+    let minutes = seconds / 60
+    let seconds = seconds % 60
+    return String(format: "%02d:%02d", minutes, seconds)
+}
+
 
 struct ImageCardView: View {
     var imageName: String
@@ -118,8 +180,8 @@ struct ImageCardView: View {
                 
                 Spacer()
                 
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    VStack(alignment: .leading) {
                         HStack(alignment: .firstTextBaseline) {
                             Text(title)
                                 .font(.title)
@@ -154,7 +216,7 @@ struct ImageCardView: View {
                             .foregroundColor(.orange)
                             .background(Color.orange.opacity(0.5))
                             .clipShape(Circle())
-                        
+                            
                     }
                 }
                 .padding(10)
