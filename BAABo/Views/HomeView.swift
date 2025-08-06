@@ -64,9 +64,9 @@ struct HomeView: View {
                         .cornerRadius(16)
                     
                     HStack {
-                        Text("식당 정하러\n떠나자")
+                        Text("식당 정하러\n떠나자!")
                             .foregroundColor(.white)
-                            .font(.title2)
+                            .font(.title)
                             .bold()
                             .multilineTextAlignment(.leading)
                         
@@ -77,6 +77,7 @@ struct HomeView: View {
                         }) {
                             HStack(spacing: 6) {
                                 Text("방 만들기")
+                                    .font(.body)
                                 Image(systemName: "chevron.right")
                             }
                             .foregroundColor(.black)
@@ -86,7 +87,7 @@ struct HomeView: View {
                             .cornerRadius(20)
                         }
                     }
-                    .padding(.horizontal, 40)
+                    .padding(.horizontal, 30)
                 }
                 
                 Spacer()
