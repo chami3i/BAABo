@@ -15,10 +15,14 @@ struct CategoryResultView: View {
                 .font(.system(size: 40, weight: .bold))
                 .padding()
             ZStack {
-                // 결과 카테고리 이미지 표시
                 Circle()    // 배경 깔기
                     .frame(width:327, height:327)
                     .foregroundColor(Color("2_greenColor"))
+                // 결과 카테고리 이미지 표시
+                Image("아시안")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 200, height: 200)
             }
             
             // 결과 카테고리 표시
