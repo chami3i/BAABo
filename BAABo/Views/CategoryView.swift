@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Category:Identifiable {       // 버튼마다 다른 이미지 할당- 데이터 세트 만들기
+struct Category:Identifiable {       // 버튼마다 다른 이미지 할당
     let id = UUID()
     let name: String
     let imageName: String
@@ -32,7 +32,7 @@ struct CategoryView: View {
     @State private var timerEnded: Bool = false     // 타이머 상태 변수 설정(끝났다면 화면 바꾸기)
     @State private var selectedCategories: [Category] = []      // 사용자가 선택한 카테고리 저장
     @State private var isAllLikedSelected: Bool = false     // 다 좋아 버튼 눌렸는지 여부
-    @State private var navigateToResult: Bool = false
+    @State private var navigateToResult: Bool = false       // CategoryResultView로 전환
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -58,12 +58,12 @@ struct CategoryView: View {
                             .foregroundColor(.white)
                             .frame(width:20, height:20)
                     }
-                    Text(String(format:"00:%02d", timeRemaining))
+                    Text(String(format:"00:%02d", timeRemaining))   // 남은 시간
                         .font(.system(size: 27, weight: .semibold))
                         .foregroundColor(timerEnded ? Color(.accent) : Color("2_greenColor"))
                 }
                 .padding(.horizontal)
-                .padding(.bottom, 30)   // 상단바와 선택버튼 사이 띄우기
+                .padding(.bottom, 30)   // 상단바와 선택버튼 사이 간격 조정
                 
                 // 카테고리 선택 버튼 (정렬)
                 LazyVGrid(columns: columns, spacing:17) {
@@ -71,7 +71,7 @@ struct CategoryView: View {
                         let isSelected = selectedCategories.contains(where: { $0.name == category.name })
                         let selectionIndex = selectedCategories.firstIndex(where: { $0.name == category.name })
                         
-                        CategoryBox(     // 샘플카테고리 이름 붙여줌
+                        CategoryBox(     // 카테고리 이름 순서대로 붙여줌
                             category :category,
                             isSelected: selectedCategories.contains(where: {$0.name == category.name}),
                             isAllLikedSelected: isAllLikedSelected,
@@ -104,7 +104,7 @@ struct CategoryView: View {
                         Text("다~좋아!")
                             .font(.system(size: 32))
                     }
-                    .foregroundColor(.black)    // 버튼 디자인 커스텀
+                    .foregroundColor(.black)
                     .padding()
                     .frame(width: 337, height: 101)
                     .background(timerEnded ? Color("1_grayColor") : Color(.accent).opacity(0.2))    // 타이머 완료되면 버튼 색 바꾸기
@@ -129,11 +129,10 @@ struct CategoryView: View {
                 
                 // 결과 보기 버튼
                 Button(action:{
-                    // button activity
                     navigateToResult = true
                 }) {
                     HStack {
-                        Text(timerEnded ? "결과 보기" : String(format: "00:%02d 후 결과 보기", timeRemaining))
+                        Text(timerEnded ? "결과 보기" : String(format: "00:%02d 후 결과 보기", timeRemaining))   // 버튼에서 남은 시간 텍스트로 보여주기
                             .font(.system(size: 30, weight: .bold))
                             .bold()
                         Image(systemName: "arrow.right.circle")
@@ -148,9 +147,9 @@ struct CategoryView: View {
                     .cornerRadius(20)
                     
                 }
-                .disabled(!timerEnded)
+                .disabled(!timerEnded)  // 타이머 끝나야 버튼 활성화
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 20)   // 전체 화면에서 좌우 여백 조정
             .navigationDestination(isPresented: $navigateToResult) {
                 CategoryResultView()
             }
@@ -185,8 +184,6 @@ struct CategoryBox: View {      // 카테고리 선택버튼 (세부설정)
     
     var body: some View {
         Button(action:{
-            // 버튼 기능
-            // if !timerEnded { onTap() }
             onTap()
         }) {
             ZStack {        // 이미지, 텍스트를 버튼 가운데 정렬
@@ -196,7 +193,7 @@ struct CategoryBox: View {      // 카테고리 선택버튼 (세부설정)
                         .frame(width: 56, height: 56)
                         .foregroundColor(.black)
                     Text(category.name)
-                        .font(.custom("SFproDisplay-Regular", size: 13))
+                        .font(.system(size: 13))
                         .foregroundColor(.black)
                 }
                 .frame(width:101, height: 101)  // 선택버튼 크기

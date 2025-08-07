@@ -14,20 +14,17 @@ struct CategoryResultView: View {
             Text("오늘의 메뉴")
                 .font(.system(size: 40, weight: .bold))
                 .padding()
-            ZStack {
-                Circle()    // 배경 깔기
+            ZStack {    // 결과 카테고리 표시
+                Circle()
                     .frame(width:327, height:327)
                     .foregroundColor(Color("2_greenColor"))
-                // 결과 카테고리 이미지 표시
                 Image("아시안")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 200, height: 200)
             }
-            
-            // 결과 카테고리 표시
-            Text("아시안")
-                .font(.system(size: 40, weight: .bold))
+            Text("아시안")     // 결과 카테고리 텍스트
+                .font(.system(size: 32, weight: .bold))
                 .padding(.bottom, 30)
             
             // 식당 보러 가기 버튼
@@ -43,13 +40,14 @@ struct CategoryResultView: View {
                         .bold()
                         .frame(width:30, height:30)
                 }
-                .foregroundColor(.black)    // 버튼 디자인 커스텀
+                .foregroundColor(.black)
                 .padding()
                 .frame(width: 337, height: 101)
                 .background(Color(.accent))
                 .cornerRadius(20)
             }
         }
+        .navigationBarBackButtonHidden(true)
     }
 }
 
