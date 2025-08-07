@@ -13,7 +13,7 @@ struct PlaceView: View {
     //        print("식당 선택 화면 생성")
     //    }
     
-    @State private var remainingTime: Int = 10
+    @State private var remainingTime: Int = 180
     @State private var timerActive: Bool = true
     
     // 결과 페이지로 이동
