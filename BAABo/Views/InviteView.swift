@@ -13,7 +13,7 @@ struct Friend: Identifiable, Hashable {
     var name: String
     var foodToAvoid: String
     var showFood: Bool = true
-    var imageName: String // 👈 각 친구의 미모지 이미지 이름
+    var imageName: String
 }
 
 let foodList = ["고수", "회", "없음", "양고기", "없음", "우유", "피망", "없음", "땅콩", "없음", "당근"]
@@ -21,7 +21,9 @@ let memojiImages = ["memoji1", "memoji2", "memoji3", "memoji4", "memoji5", "memo
 
 // MARK: - 메인 뷰
 struct InviteView: View {
-    let location: String
+    @Environment(\.dismiss) var dismiss
+
+    let location: String = "포항시 남구"
 
     @State private var invitedFriends: [Friend] = []
     @State private var friendCount: Int = 1
@@ -35,9 +37,22 @@ struct InviteView: View {
             Color(red: 1.0, green: 0.91, blue: 0.82).ignoresSafeArea()
 
             VStack(spacing: 20) {
+                
+                HStack {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "arrow.left")
+                            .font(.title2)
+                            .foregroundColor(.black)
+                    }
+                    Spacer()
+                }
+                .padding(.leading, 20)
+
                 // 위치
-                HStack(spacing: 6) {
-                    Image(systemName: "mappin.and.ellipse")
+                HStack(spacing: 5) {
+                    Image(systemName: "location.fill")
                         .foregroundColor(.black)
                     Text("\(location)에서 식당 찾는중")
                         .font(.title3)
@@ -45,7 +60,7 @@ struct InviteView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 24)
-                .padding(.top, 30)
+                .padding(.top, 5)
 
                 // 링크
                 HStack {
@@ -139,7 +154,7 @@ struct InviteView: View {
                         }) {
                             HStack {
                                 Text("떠나자")
-                                Image(systemName: "arrow.right")
+                                Image(systemName: "arrow.right.circle")
                             }
                             .font(.headline)
                             .foregroundColor(.black)
@@ -188,17 +203,34 @@ struct FriendSettingView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("마이페이지")
-                .font(.title)
-                .fontWeight(.bold)
+            // 🔸 상단 타이틀 + X 버튼
+            ZStack {
+                Text("마이페이지")
+                    .font(.title)
+                    .fontWeight(.bold)
 
-            Image(friend.imageName) // ⬅️ 친구의 미모지
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        isPresented = false
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.title2)
+                            .foregroundColor(.black)
+                    }
+                }
+            }
+            .padding(.horizontal)
+
+
+            Image(friend.imageName) //미모지
                 .resizable()
                 .frame(width: 100, height: 100)
                 .clipShape(Circle())
                 .shadow(radius: 5)
                 .padding()
-
+            
+            
             VStack(alignment: .leading, spacing: 12) {
                 Text("이름")
                     .font(.headline)
@@ -230,12 +262,7 @@ struct FriendSettingView: View {
             .cornerRadius(12)
             .padding(.horizontal)
 
-            Button("닫기") {
-                isPresented = false
-            }
-            .foregroundColor(.blue)
-            .padding(.top)
-
+        
             Spacer()
         }
         .padding()
@@ -265,6 +292,6 @@ extension View {
 
 // MARK: - 프리뷰
 #Preview {
-    InviteView(location: "포항 남구")
+    InviteView()
 }
 
