@@ -16,20 +16,19 @@ struct PlaceView: View {
     @State private var remainingTime: Int = 180
     @State private var timerActive: Bool = true
     
-    // 나의 선택 끝! 버튼 눌렀는지
-    @State private var selectedPlace: Bool = false
     // 결과 페이지로 이동
-    @State private var moveToResultView: Bool = false
+    @State private var moveToPlaceResultView: Bool = false
     
     // 타이머 생성
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack (spacing: 20){
                     
+                    // 상단 타이틀, 타이머 UI
                     HStack {
                         Text("식당 선택")
                             .font(.largeTitle)
@@ -38,90 +37,82 @@ struct PlaceView: View {
                         
                         Spacer()
                         
-                        Image(systemName:   "timer.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.green)
+                        Group {
+                            Image(systemName:   "timer.circle.fill")
+                                .font(.title2)
                             
-                        Text(timeString(from: remainingTime))
-                            .font(.title)
-                            .monospacedDigit()
-                            .foregroundColor(.green)
+                            Text(timeString(from: remainingTime))
+                                .font(.title)
+                                .monospacedDigit()
+                        }
+                        .foregroundColor(timerActive ? .orange : .gray)
                     }
                     .padding(.horizontal)
                     
-                    
+                    // 식당 카드
                     VStack(alignment: .leading, spacing: 20) {
-                        
-                        NavigationLink(destination: Text("이미지 보는 걸로? 메뉴판?")) {
-                            ImageCardView(imageName: "포항순이", title: "포항 순이", category: "일본식라멘",status: "영업 중", hours: "11:30 - 20:30",  rating: "5.0", destination:  { AnyView(Text("포항순이 상세 페이지"))} )
+                    
+                        NavigationLink(destination: Text("포항 순이 상세 페이지")) {
+                            ImageCardView(imageName: "포항순이", title: "포항 순이", category: "일본식라멘",status: "영업 중", hours: "11:30 - 20:30",  rating: "5.0", isEnabled: timerActive)
                         }
                         
                         NavigationLink(destination: Text("소노이에 상세 페이지")) {
-                            ImageCardView(imageName: "소노이에", title: "소노이에", category: "일식당",status: "영업 중", hours: "11:00 - 20:30", rating: "4.7", destination: {AnyView(Text("소노이에 상세 페이지"))} )
+                            ImageCardView(imageName: "소노이에", title: "소노이에", category: "일식당",status: "영업 중", hours: "11:00 - 20:30", rating: "4.7", isEnabled: timerActive)
                         }
                         
                         NavigationLink(destination: Text("효자동수우동 상세 페이지")) {
-                            ImageCardView(imageName: "효자동수우동", title: "효자동수우동", category: "우동, 소바",status: "영업 중", hours: "11:30 - 20:00", rating: "4.1", destination:  {AnyView(Text("효자동수우동 상세 페이지"))} )
+                            ImageCardView(imageName: "효자동수우동", title: "효자동수우동", category: "우동, 소바",status: "영업 중", hours: "11:30 - 20:00", rating: "4.1", isEnabled: timerActive)
                         }
                         
                         NavigationLink(destination: Text("포항 순이 상세 페이지")) {
-                            ImageCardView(imageName: "포항순이", title: "포항 순이", category: "일본식라멘",status: "영업 중", hours: "11:30 - 20:30",  rating: "5.0", destination:  { AnyView(Text("포항순이 상세 페이지"))} )
+                            ImageCardView(imageName: "포항순이", title: "포항 순이", category: "일본식라멘",status: "영업 중", hours: "11:30 - 20:30",  rating: "5.0", isEnabled: timerActive)
                         }
                         
                         NavigationLink(destination: Text("소노이에 상세 페이지")) {
-                            ImageCardView(imageName: "소노이에", title: "소노이에", category: "일식당",status: "영업 중", hours: "11:00 - 20:30", rating: "4.7", destination: {AnyView(Text("소노이에 상세 페이지"))} )
+                            ImageCardView(imageName: "소노이에", title: "소노이에", category: "일식당",status: "영업 중", hours: "11:00 - 20:30", rating: "4.7", isEnabled: timerActive)
                         }
                         
                         NavigationLink(destination: Text("효자동수우동 상세 페이지")) {
-                            ImageCardView(imageName: "효자동수우동", title: "효자동수우동", category: "우동, 소바",status: "영업 중", hours: "11:30 - 20:00", rating: "4.1", destination:  {AnyView(Text("효자동수우동 상세 페이지"))} )
+                            ImageCardView(imageName: "효자동수우동", title: "효자동수우동", category: "우동, 소바",status: "영업 중", hours: "11:30 - 20:00", rating: "4.1", isEnabled: timerActive)
                         }
                     }
-                    HStack {
-                        Button("나의 선택 끝!") {
-                            selectedPlace = true
-                        }
+                    
+                    // 결과 보기 버튼
+                    Button(action : {
+                        moveToPlaceResultView = true
+                    }) {
+                        Text(timerActive ? "\(timeString(from: remainingTime)) 후 결과 보기" : "결과 보기")
                             .font(.title)
                             .bold()
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
                             .padding()
-                            .background(Color.orange)
+                            .background(
+                                timerActive
+                                ? Color.gray.opacity(0.4)
+                                : Color.orange)
                             .cornerRadius(20)
-                            //.disabled(!timerActive)
-                        
-                        Button("결과 보기") {
-                            // moveToResultView = true
-                        }
-                        .font(.title)
-                        .bold()
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .padding()
-                        .background(Color.orange)
-                        .cornerRadius(20)
-                        .disabled(timerActive)
                     }
-                    
-                    if selectedPlace {
-                        Text("선택 완료! \(timeString(from: remainingTime)) 후 오늘의 식당이 공개됩니다!")
-                    }
+                    .disabled(timerActive)
                     
                     // Spacer()
                 }
                 .padding()
                 //.navigationTitle("식당")
             }
+            .navigationDestination(isPresented: $moveToPlaceResultView) {
+                PlaceResultView()
+            }
             
         }
+        // 타이머
         .onReceive(timer) { _ in
             guard timerActive else { return }
             if remainingTime > 0 {
                 remainingTime -= 1
             } else {
                 timerActive = false
-                //moveToResultView() = true
             }
         }
     }
@@ -142,7 +133,7 @@ struct ImageCardView: View {
     var status: String
     var hours: String
     var rating: String
-    var destination: ()-> AnyView
+    var isEnabled: Bool
     
     @State private var isFavorite = false
     
@@ -210,21 +201,23 @@ struct ImageCardView: View {
                     
                     Spacer()
                     
-                    NavigationLink(destination: destination()) {
-                        Image(systemName: "chevron.right.circle.fill")
-                            .font(.title)
-                            .foregroundColor(.orange)
-                            .background(Color.orange.opacity(0.5))
-                            .clipShape(Circle())
-                            
-                    }
                 }
                 .padding(10)
                 .background(Color.white.opacity(0.5))
                 .cornerRadius(10)
                 .frame(maxWidth: .infinity, minHeight: 60)
                 .padding([.horizontal, .bottom], 10)
-                
+            }
+            
+            if !isEnabled {
+                ZStack {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.8))
+                        .cornerRadius(20)
+                    Text("선택 마감")
+                        .font(.title)
+                        .foregroundColor(.white)
+                }
             }
         }
     }
