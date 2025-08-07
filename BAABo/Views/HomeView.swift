@@ -114,7 +114,7 @@ struct HomeView: View {
                 
                 // 🎯 맛집 퀘스트
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("랜덤 맛집 퀘스트")
+                    Text("챌린지")
                         .font(.headline)
                         .foregroundColor(.black)
                     
