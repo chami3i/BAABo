@@ -28,14 +28,17 @@ struct ContentView: View {
                 case .home:
                     HomeView()
                 case .createRoom:
-                    HomeView()
+                    InviteView()
                 case .myPage:
                     MypageView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-         
-            CustomTabBar(selectedTab: $selectedTab)
+            
+            //CustomTabBar(selectedTab: $selectedTab)
+            if selectedTab == .home || selectedTab == .myPage {
+                CustomTabBar(selectedTab: $selectedTab)
+            }
         }
     }
 }
