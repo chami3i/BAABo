@@ -42,7 +42,7 @@ struct CategoryView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                // 상단바
+                // MARK: 상단바
                 HStack {
                     Text("카테고리 선택")     // 페이지 이름
                         .font(.system(size: 30, weight: .bold))
@@ -65,7 +65,7 @@ struct CategoryView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 30)   // 상단바와 선택버튼 사이 간격 조정
                 
-                // 카테고리 선택 버튼 (정렬)
+                // MARK: 카테고리 선택 버튼 (정렬)
                 LazyVGrid(columns: columns, spacing:17) {
                     ForEach(sampleCategories) {category in
                         let isSelected = selectedCategories.contains(where: { $0.name == category.name })
@@ -87,7 +87,7 @@ struct CategoryView: View {
                 .padding(.bottom, 16)
                 
                 
-                // 다좋아 버튼
+                // MARK: 다좋아 버튼
                 Button(action:{
                     // 버튼 기능
                     isAllLikedSelected.toggle()     // 버튼 선택과 해제를 자유롭게 할 수 있도록 토글 사용
@@ -127,7 +127,7 @@ struct CategoryView: View {
                 
                 .padding(.bottom, 80)
                 
-                // 결과 보기 버튼
+                // MARK: 결과 보기 버튼
                 Button(action:{
                     navigateToResult = true
                 }) {
@@ -155,7 +155,7 @@ struct CategoryView: View {
             }
         }
     }
-    // 카테고리 선택 처리 함수
+    // MARK: 카테고리 선택 처리 함수
     func handleCategoryTap(_ category: Category) {
         // 다 좋아 버튼 선택 상태에서는 카테고리 선택 불가
         if isAllLikedSelected {
