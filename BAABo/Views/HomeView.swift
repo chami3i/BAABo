@@ -53,7 +53,22 @@ struct HomeView: View {
         gradientColors.randomElement() ?? [Color.gray, Color.gray]
     }
     
+    let menuItems: [TodayMenuItem] = [
+        TodayMenuItem(name: "비빔밥", category: "한식", emoji: "🍚", description: "다양한 재료가 한 그릇에 쏙! 맛과 건강을 모두 담은 비빔밥!"),
+        TodayMenuItem(name: "라멘", category: "일식", emoji: "🍜", description: "따뜻하고 깊은 국물의 일본식 라멘 어때요~?"),
+        TodayMenuItem(name: "파스타", category: "양식", emoji: "🍝", description: "입안 가득 퍼지는 크림과 토마토의 조화, 오늘은 파스타로 기분 전환"),
+        TodayMenuItem(name: "떡볶이", category: "분식", emoji: "🌶️", description: "쫄깃한 떡과 매콤달콤 소스의 완벽한 조화! 오늘은 떡볶이로 스트레스 탈출!"),
+        TodayMenuItem(name: "김치찌개", category: "한식", emoji: "🥘", description: "한국인의 소울푸드, 집밥 같은 정겨운 김치찌개 한 그릇 어떠세요?"),
+        TodayMenuItem(name: "샐러드", category: "양식", emoji: "🥗", description: "칼로리 걱정 없이 든든하게, 신선함 가득한 샐러드 한 그릇")
+    ]
+    
+    func getTodayMenu() -> TodayMenuItem {
+            return menuItems.randomElement()!
+        }
+    
     var body: some View {
+        
+        let todayMenu = getTodayMenu()
         
         ScrollView(.vertical, showsIndicators: true) {
             VStack(spacing: 16) {
@@ -105,14 +120,33 @@ struct HomeView: View {
                         .fill(Color.gray.opacity(0.1))
                         .frame(height: 120)
                         .overlay(
-                            Text("내용 표시 영역")
-                                .foregroundColor(.gray)
+                            HStack(spacing: 16) {
+                                
+                                // 음식 이모지
+                                Text(todayMenu.emoji)
+                                    .font(.system(size: 48))
+                                
+                                VStack(alignment: .leading, spacing: 6) {
+                                    // 메뉴 이름
+                                    Text(todayMenu.name)
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.black)
+                                    
+                                    // 간단한 설명
+                                    Text(todayMenu.description)
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                        .lineLimit(2)
+                                }
+                            }
+                                .padding(.horizontal, 20)
                         )
                 }
                 
                 Spacer()
                 
-                // 🎯 맛집 퀘스트
+                // 🎯 챌린지
                 VStack(alignment: .leading, spacing: 8) {
                     Text("챌린지")
                         .font(.headline)
@@ -310,8 +344,6 @@ struct HomeView: View {
                                 Text(person.name)
                                     .font(.caption)
                                     .lineLimit(1)
-                                
-                                
                             }
                         }
                     }
@@ -329,6 +361,13 @@ struct HomeView: View {
 struct Person {
     let name: String
     let imageName: String?
+}
+
+struct TodayMenuItem {
+    let name: String
+    let category: String
+    let emoji: String
+    let description: String
 }
 
 #Preview {
