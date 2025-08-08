@@ -153,6 +153,7 @@ struct CategoryView: View {
             .navigationDestination(isPresented: $navigateToResult) {
                 CategoryResultView()
             }
+            .navigationBarBackButtonHidden(true)
         }
     }
     // MARK: 카테고리 선택 처리 함수
