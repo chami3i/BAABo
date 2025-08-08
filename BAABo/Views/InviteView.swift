@@ -23,7 +23,7 @@ let memojiImages = ["memoji1", "memoji2", "memoji3", "memoji4", "memoji5", "memo
 struct InviteView: View {
     @Environment(\.dismiss) var dismiss
 
-    let location: String = "포항시 남구"
+    let location: String
 
     @State private var invitedFriends: [Friend] = []
     @State private var friendCount: Int = 1
@@ -289,6 +289,6 @@ extension View {
 
 // MARK: - 프리뷰
 #Preview {
-    InviteView()
+    // InviteView()
 }
 
