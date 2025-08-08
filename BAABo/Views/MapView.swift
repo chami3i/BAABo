@@ -9,11 +9,12 @@ struct LocationMarker: Identifiable {
 struct MapView: View {
     @StateObject private var viewModel = MapViewModel()
     @State private var navigateToInvite = false
+    @State private var selectedLocationName: String = ""   // ✅ 추가
 
     var body: some View {
         NavigationStack {
             NavigationLink(
-                            destination: InviteView(),        // 이동할 화면
+                destination: InviteView(location: selectedLocationName), // ✅ 전달
                             isActive: $navigateToInvite,      // true가 되면 push
                             label: { EmptyView() }
                         )
@@ -77,6 +78,7 @@ struct MapView: View {
                                 VStack(spacing: 0) {
                                     ForEach(viewModel.completions, id: \.self) { item in
                                         Button {
+                                            selectedLocationName = item.title   // ✅ 위치 저장
                                             viewModel.searchLocation(from: item)
                                         } label: {
                                             VStack(alignment: .leading) {
