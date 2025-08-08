@@ -12,6 +12,13 @@ struct MapView: View {
 
     var body: some View {
         NavigationStack {
+            NavigationLink(
+                            destination: InviteView(),        // 이동할 화면
+                            isActive: $navigateToInvite,      // true가 되면 push
+                            label: { EmptyView() }
+                        )
+                        .hidden()
+            
             ZStack {
                 // ✅ 지도 및 중심 원
                 ZStack(alignment: .top) {
@@ -91,7 +98,7 @@ struct MapView: View {
                             .frame(maxHeight: 208)
                             .background(Color.white)
                             .cornerRadius(12, corners: [.bottomLeft, .bottomRight])
-                            .shadow(radius: 4)
+                            //.shadow(radius: 4)
                             .padding(.horizontal)
                             .zIndex(11)
                         }
