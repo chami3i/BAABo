@@ -360,7 +360,7 @@ struct HomeView: View {
                 .padding(.horizontal, 30)
                 .padding(.top, 10)
                 .navigationDestination(isPresented: $isNavigating) {
-                    InviteView()
+                    MapView()
                 }
             }
         }
