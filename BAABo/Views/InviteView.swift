@@ -19,7 +19,7 @@ struct Friend: Identifiable, Hashable {
 let foodList = ["고수", "회", "없음", "양고기", "없음", "우유", "피망", "없음", "땅콩", "없음", "당근"]
 let memojiImages = ["memoji1", "memoji2", "memoji3", "memoji4", "memoji5", "memoji6"]
 
-// MARK: - 메인 뷰
+// MARK: - InviteView (메인 화면)
 struct InviteView: View {
     @Environment(\.dismiss) var dismiss
 
@@ -31,15 +31,16 @@ struct InviteView: View {
 
     @State private var selectedFriendIndex: Int? = nil
     @State private var isPopupPresented: Bool = false
-    
+
     @State private var isNavigatingToCategory = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color(red: 1.0, green: 0.91, blue: 0.82).ignoresSafeArea()
 
                 VStack(spacing: 20) {
+
                     HStack {
                         Button(action: {
                             dismiss()
@@ -52,6 +53,7 @@ struct InviteView: View {
                     }
                     .padding(.leading, 20)
 
+                    // 위치 표시
                     HStack(spacing: 5) {
                         Image(systemName: "location.fill")
                             .foregroundColor(.black)
@@ -63,6 +65,7 @@ struct InviteView: View {
                     .padding(.horizontal, 24)
                     .padding(.top, 5)
 
+                    // 링크 표시
                     HStack {
                         Image(systemName: "link")
                         Text("https://BAABo.com")
@@ -75,6 +78,7 @@ struct InviteView: View {
                     .padding(.horizontal, 24)
                     .padding(.top, -10)
 
+                    // 미모지
                     HStack(spacing: -10) {
                         Image("memoji1")
                             .resizable()
@@ -92,6 +96,7 @@ struct InviteView: View {
                             .shadow(radius: 5)
                     }
 
+                    // 카드 영역
                     ZStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
@@ -103,6 +108,7 @@ struct InviteView: View {
                             .padding(.top, 40)
                             .padding(.horizontal)
 
+                            // 친구 리스트
                             ScrollView {
                                 VStack(spacing: 12) {
                                     ForEach(invitedFriends.indices, id: \.self) { index in
@@ -124,9 +130,7 @@ struct InviteView: View {
                                             Image(systemName: "gearshape.fill")
                                                 .onTapGesture {
                                                     selectedFriendIndex = index
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                                        isPopupPresented = true
-                                                    }
+                                                    isPopupPresented = true
                                                 }
                                         }
                                         .padding()
@@ -136,6 +140,7 @@ struct InviteView: View {
                                     }
                                 }
                             }
+
                             Spacer()
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -144,12 +149,15 @@ struct InviteView: View {
                         .shadow(radius: 5)
                         .ignoresSafeArea(edges: .bottom)
 
+                        // 떠나자 버튼 + NavigationLink
                         HStack {
                             Spacer()
+
                             NavigationLink(destination: CategoryView(), isActive: $isNavigatingToCategory) {
                                 EmptyView()
-                            }.hidden()
-                            
+                            }
+                            .hidden()
+
                             Button(action: {
                                 isNavigatingToCategory = true
                             }) {
@@ -165,6 +173,7 @@ struct InviteView: View {
                                 .cornerRadius(12)
                                 .shadow(radius: 3)
                             }
+
                             Spacer()
                         }
                         .offset(y: -30)
