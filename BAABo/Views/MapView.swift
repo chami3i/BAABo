@@ -10,7 +10,8 @@ struct MapView: View {
     @StateObject private var viewModel = MapViewModel()
     @State private var navigateToInvite = false
     @State private var selectedLocationName: String = ""   // ✅ 추가
-
+    
+    private var canConfirm: Bool { !selectedLocationName.isEmpty } // ✅ 추가
     var body: some View {
         NavigationStack {
             NavigationLink(
@@ -127,9 +128,11 @@ struct MapView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.orange)
+                        .background(canConfirm ? Color.orange : Color.gray.opacity(0.5)) // ✅ 비활성화 색상
                         .foregroundColor(.white)
                         .cornerRadius(12)
+                        .disabled(!canConfirm)                                          // ✅ 비활성화 로직
+                        .animation(.default, value: canConfirm)
                     }
                     .padding()
                     .background(Color.white)
