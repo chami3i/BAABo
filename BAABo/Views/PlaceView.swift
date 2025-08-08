@@ -101,6 +101,7 @@ struct PlaceView: View {
                 .padding()
                 //.navigationTitle("식당")
             }
+            .navigationBarBackButtonHidden(true)
             .navigationDestination(isPresented: $moveToPlaceResultView) {
                 PlaceResultView()
             }
