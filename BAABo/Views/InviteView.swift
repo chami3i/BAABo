@@ -45,9 +45,9 @@ struct InviteView: View {
                         Button(action: {
                             dismiss()
                         }) {
-                            Image(systemName: "arrow.left")
-                                .font(.title2)
-                                .foregroundColor(.black)
+//                            Image(systemName: "arrow.left")
+//                                .font(.title2)
+//                                .foregroundColor(.black)
                         }
                         Spacer()
                     }
