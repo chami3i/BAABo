@@ -9,11 +9,9 @@ import SwiftUI
 
 struct PlaceView: View {
     
-    //    init() {
-    //        print("식당 선택 화면 생성")
-    //    }
+    var category: String
     
-    @State private var remainingTime: Int = 180
+    @State private var remainingTime: Int = 120
     @State private var timerActive: Bool = true
     
     // 결과 페이지로 이동
@@ -27,6 +25,13 @@ struct PlaceView: View {
         NavigationStack {
             ScrollView {
                 VStack (spacing: 20){
+                    
+                    Text("\(category)")
+                        .font(.title)
+                        .underline()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .padding(.bottom, -15)
                     
                     // 상단 타이틀, 타이머 UI
                     HStack {
@@ -226,5 +231,5 @@ struct ImageCardView: View {
 
 
 #Preview {
-    PlaceView()
+    PlaceView(category: "돈가스·회·일식")
 }

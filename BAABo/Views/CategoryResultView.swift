@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CategoryResultView: View {
     @State private var moveToPlaceView = false
+    let selectedCategory = "아시안" // TODO: 나중에 동적으로 바꾸기
     
     var body: some View {
         
@@ -52,7 +53,7 @@ struct CategoryResultView: View {
             }
             .navigationBarBackButtonHidden(true)
             .navigationDestination(isPresented: $moveToPlaceView) {
-                PlaceView()
+                PlaceView(category: selectedCategory)
             }
         }
     }
