@@ -185,5 +185,5 @@ struct MapView: View {
 //}
 
 #Preview {
-    MapView()
+    MapView(roomId: "dummyRoomId123")
 }
