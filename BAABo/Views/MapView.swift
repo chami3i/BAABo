@@ -12,14 +12,17 @@ struct MapView: View {
     @State private var selectedLocationName: String = ""   // ✅ 추가
     
     private var canConfirm: Bool { !selectedLocationName.isEmpty } // ✅ 추가
+    
+    let roomId: String
+    
     var body: some View {
         NavigationStack {
             NavigationLink(
                 destination: InviteView(location: selectedLocationName), // ✅ 전달
-                            isActive: $navigateToInvite,      // true가 되면 push
-                            label: { EmptyView() }
-                        )
-                        .hidden()
+                isActive: $navigateToInvite,      // true가 되면 push
+                label: { EmptyView() }
+            )
+            .hidden()
             
             ZStack {
                 // ✅ 지도 및 중심 원
@@ -35,13 +38,13 @@ struct MapView: View {
                                 .frame(width: 12, height: 12)
                         }
                     }
-                    .edgesIgnoringSafeArea(.all)
-                    .ignoresSafeArea(.keyboard)
-
+                        .edgesIgnoringSafeArea(.all)
+                        .ignoresSafeArea(.keyboard)
+                    
                     GeometryReader { geo in
                         let diameter = viewModel.radiusInMeters /
-                            metersPerPoint(region: viewModel.region, screenWidth: geo.size.width)
-
+                        metersPerPoint(region: viewModel.region, screenWidth: geo.size.width)
+                        
                         Circle()
                             .fill(Color.green.opacity(0.25))
                             .overlay(
@@ -52,7 +55,7 @@ struct MapView: View {
                             .position(x: geo.size.width / 2, y: geo.size.height / 2)
                     }
                     .allowsHitTesting(false)
-
+                    
                     // ✅ 검색창 + 자동완성 리스트
                     VStack(spacing: 0) {
                         // 검색창
@@ -60,7 +63,7 @@ struct MapView: View {
                             TextField("위치를 검색하세요", text: $viewModel.searchQuery)
                                 .textFieldStyle(.plain)
                                 .padding(12)
-
+                            
                             Button(action: {
                                 viewModel.searchLocation()
                             }) {
@@ -72,7 +75,7 @@ struct MapView: View {
                         .cornerRadius(12, corners: [.topLeft, .topRight])
                         .padding(.horizontal)
                         .padding(.top, 10)
-
+                        
                         // 자동완성 리스트
                         if !viewModel.completions.isEmpty {
                             ScrollView {
@@ -112,7 +115,7 @@ struct MapView: View {
                 .onAppear {
                     viewModel.requestLocationAccess()
                 }
-
+                
                 // ✅ 하단 고정 슬라이더 + 버튼
                 VStack {
                     Spacer()
@@ -122,9 +125,13 @@ struct MapView: View {
                             Slider(value: $viewModel.radiusInMeters, in: 0...1000, step: 50)
                             Text("1km")
                         }
-
+                        
                         Button("확정") {
-                            navigateToInvite = true
+                            RoomService.updateRoomLocation(roomId: roomId, location: selectedLocationName) { success in
+                                if success {
+                                    navigateToInvite = true
+                                }
+                            }
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -146,7 +153,7 @@ struct MapView: View {
             }
         }
     }
-
+    
     func metersPerPoint(region: MKCoordinateRegion, screenWidth: CGFloat) -> Double {
         let span = region.span.longitudeDelta
         let centerLat = region.center.latitude * .pi / 180
