@@ -183,3 +183,7 @@ struct MapView: View {
 //        return Path(path.cgPath)
 //    }
 //}
+
+#Preview {
+    MapView()
+}

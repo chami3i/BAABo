@@ -9,12 +9,14 @@ import SwiftUI
 
 struct CategoryResultView: View {
     @State private var moveToPlaceView = false
+    let selectedCategory = "아시안" // TODO: 나중에 동적으로 바꾸기
     
     var body: some View {
         
         NavigationStack {
             VStack {
                 Text("오늘의 메뉴")
+                    
                     .font(.system(size: 40, weight: .bold))
                     .padding()
                 ZStack {    // 결과 카테고리 표시
@@ -36,7 +38,9 @@ struct CategoryResultView: View {
                 }) {
                     HStack {
                         Text("식당 보러 가기")
-                            .font(.system(size: 32, weight: .bold))
+                           // .font(.system(size: 32, weight: .bold))
+                            .font(.title)
+                            .fontWeight(.bold)
                         Image(systemName: "arrow.right.circle")
                             .resizable()
                             .scaledToFit()
@@ -52,7 +56,7 @@ struct CategoryResultView: View {
             }
             .navigationBarBackButtonHidden(true)
             .navigationDestination(isPresented: $moveToPlaceView) {
-                PlaceView()
+                PlaceView(category: selectedCategory)
             }
         }
     }
