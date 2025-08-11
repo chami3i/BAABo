@@ -16,7 +16,8 @@ enum Tab {
 struct ContentView: View {
     
     @State private var selectedTab: Tab = .home
-    @State private var isNavigating = false
+    @State private var createdRoomId: String? = nil
+    @State private var isNavigation = false
     
     var body: some View {
         NavigationStack {
@@ -31,8 +32,17 @@ struct ContentView: View {
                     case .createRoom:
                         Color.clear
                             .onAppear {
-                                isNavigating = true
-                                selectedTab = .home  // 또는 .myPage 등 원하는 탭으로 복구
+                                
+                                selectedTab = .home
+                                
+                                RoomService.createRoom { roomId in
+                                    if let id = roomId {
+                                        self.createdRoomId = id
+                                        self.isNavigation = true
+                                    } else {
+                                        print("방 생성 실패")
+                                    }
+                                }
                             }
                     case .myPage:
                         MypageView()
@@ -40,14 +50,18 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
-                //CustomTabBar(selectedTab: $selectedTab)
+                // 커스텀 탭바 (selectedTab: $selectedTab)
                 if selectedTab == .home || selectedTab == .myPage {
                     CustomTabBar(selectedTab: $selectedTab)
                 }
             }
-            .navigationDestination(isPresented: $isNavigating) {
-                MapView()
+            
+            .navigationDestination(isPresented: .constant(createdRoomId != nil)) {
+                if let roomId = createdRoomId {
+                    MapView(roomId: roomId)
+                }
             }
+            
         }
     }
 }
