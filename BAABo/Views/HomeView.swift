@@ -117,6 +117,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("오늘의 메뉴 추천")
                             .font(.headline)
+                            .fontWeight(.semibold)
                             .foregroundColor(.black)
                         
                         Spacer()
@@ -155,6 +156,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("챌린지")
                             .font(.headline)
+                            .fontWeight(.semibold)
                             .foregroundColor(.black)
                         
                         Spacer()
@@ -194,7 +196,9 @@ struct HomeView: View {
                     // 📝 최근 방문 식당 리뷰
                     VStack(alignment: .leading, spacing: 8) {
                         Text("\(nickname)님, 최근에 방문하신\n\(place) 어떠셨어요?")
-                            .font(.headline)
+                            .font(.title3)
+                            
+                            .fontWeight(.semibold)
                             .foregroundColor(.black)
                         
                         Spacer()

@@ -41,17 +41,7 @@ struct InviteView: View {
 
                 VStack(spacing: 20) {
 
-                    HStack {
-                        Button(action: {
-                            dismiss()
-                        }) {
-//                            Image(systemName: "arrow.left")
-//                                .font(.title2)
-//                                .foregroundColor(.black)
-                        }
-                        Spacer()
-                    }
-                    .padding(.leading, 20)
+                    
 
                     // 위치 표시
                     HStack(spacing: 5) {
