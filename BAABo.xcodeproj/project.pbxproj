@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		64B0C4522E49D5210038CFC8 /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = 64B0C4512E49D5210038CFC8 /* GooglePlaces */; };
-		64B0C4542E49D5210038CFC8 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 64B0C4532E49D5210038CFC8 /* GooglePlacesSwift */; };
+		A2E1E3A42E4B0B2200AE7E63 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A2E1E3A32E4B0B2200AE7E63 /* FirebaseAuth */; };
+		A2E1E3A62E4B0B2200AE7E63 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = A2E1E3A52E4B0B2200AE7E63 /* FirebaseCore */; };
+		A2E1E3A82E4B0B2200AE7E63 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = A2E1E3A72E4B0B2200AE7E63 /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -16,7 +17,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		64B0C4C52E4B571E0038CFC8 /* Exceptions for "BAABo" folder in "BAABo" target */ = {
+		A2E1E3E32E4B231A00AE7E63 /* Exceptions for "BAABo" folder in "BAABo" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -29,7 +30,7 @@
 		64B0C32F2E4095EF0038CFC8 /* BAABo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				64B0C4C52E4B571E0038CFC8 /* Exceptions for "BAABo" folder in "BAABo" target */,
+				A2E1E3E32E4B231A00AE7E63 /* Exceptions for "BAABo" folder in "BAABo" target */,
 			);
 			path = BAABo;
 			sourceTree = "<group>";
@@ -41,8 +42,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				64B0C4522E49D5210038CFC8 /* GooglePlaces in Frameworks */,
-				64B0C4542E49D5210038CFC8 /* GooglePlacesSwift in Frameworks */,
+				A2E1E3A62E4B0B2200AE7E63 /* FirebaseCore in Frameworks */,
+				A2E1E3A42E4B0B2200AE7E63 /* FirebaseAuth in Frameworks */,
+				A2E1E3A82E4B0B2200AE7E63 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,8 +87,9 @@
 			);
 			name = BAABo;
 			packageProductDependencies = (
-				64B0C4512E49D5210038CFC8 /* GooglePlaces */,
-				64B0C4532E49D5210038CFC8 /* GooglePlacesSwift */,
+				A2E1E3A32E4B0B2200AE7E63 /* FirebaseAuth */,
+				A2E1E3A52E4B0B2200AE7E63 /* FirebaseCore */,
+				A2E1E3A72E4B0B2200AE7E63 /* FirebaseFirestore */,
 			);
 			productName = BAABo;
 			productReference = 64B0C32D2E4095EF0038CFC8 /* BAABo.app */;
@@ -117,7 +120,7 @@
 			mainGroup = 64B0C3242E4095EF0038CFC8;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				64B0C4502E49D5210038CFC8 /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+				A2E1E3A22E4B0B2200AE7E63 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 64B0C32E2E4095EF0038CFC8 /* Products */;
@@ -280,7 +283,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MU9ZV7F556;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BAABo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -309,7 +312,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MU9ZV7F556;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BAABo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -353,26 +356,31 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		64B0C4502E49D5210038CFC8 /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
+		A2E1E3A22E4B0B2200AE7E63 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/googlemaps/ios-places-sdk";
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 10.1.0;
+				minimumVersion = 12.1.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		64B0C4512E49D5210038CFC8 /* GooglePlaces */ = {
+		A2E1E3A32E4B0B2200AE7E63 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 64B0C4502E49D5210038CFC8 /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
-			productName = GooglePlaces;
+			package = A2E1E3A22E4B0B2200AE7E63 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
 		};
-		64B0C4532E49D5210038CFC8 /* GooglePlacesSwift */ = {
+		A2E1E3A52E4B0B2200AE7E63 /* FirebaseCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 64B0C4502E49D5210038CFC8 /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
-			productName = GooglePlacesSwift;
+			package = A2E1E3A22E4B0B2200AE7E63 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		A2E1E3A72E4B0B2200AE7E63 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A2E1E3A22E4B0B2200AE7E63 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
