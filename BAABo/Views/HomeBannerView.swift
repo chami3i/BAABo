@@ -8,9 +8,7 @@
 import SwiftUI
 
 struct HomeBannerView: View {
-    
-    @State private var createdRoomId: String? = nil
-    @State private var isNavigation = false
+    @EnvironmentObject var router: Router
     
     var body: some View {
         NavigationStack {
@@ -30,10 +28,13 @@ struct HomeBannerView: View {
                     Spacer()
                     
                     Button(action: {
-                        RoomService.createRoom() { roomId in
+                        RoomService.createRoom { roomId in
                             if let id = roomId {
-                                self.createdRoomId = id
-                                self.isNavigation = true
+                                DispatchQueue.main.async {
+                                    router.currentRoomId = id
+                                    router.isHost = true
+                                    router.navigateToMapView = true
+                                }
                             }
                         }
                     }) {
@@ -50,12 +51,6 @@ struct HomeBannerView: View {
                     }
                 }
                 .padding(.horizontal, 30)
-                
-            }
-            .navigationDestination(isPresented: .constant(createdRoomId != nil)) {
-                if let roomId = createdRoomId {
-                    MapView(roomId: roomId)
-                }
             }
         }
     }
