@@ -22,27 +22,34 @@ let memojiImages = ["memoji1", "memoji2", "memoji3", "memoji4", "memoji5", "memo
 // MARK: - InviteView (메인 화면)
 struct InviteView: View {
     @Environment(\.dismiss) var dismiss
-
+    
     let location: String
-
+    
+    @State private var roomCode: String? = nil
+    @State private var urlCopied = false
+    
     @State private var invitedFriends: [Friend] = []
     @State private var friendCount: Int = 1
     @State private var timer: Timer?
-
+    
     @State private var selectedFriendIndex: Int? = nil
     @State private var isPopupPresented: Bool = false
-
+    
     @State private var isNavigatingToCategory = false
-
+    
+    // 초대 URL
+    var inviteURL: String {
+        guard let code = roomCode else { return "방 생성 중..." }
+        return "https://BAABo.com/join/\(code)"
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(red: 1.0, green: 0.91, blue: 0.82).ignoresSafeArea()
-
+                
                 VStack(spacing: 20) {
-
                     
-
                     // 위치 표시
                     HStack(spacing: 5) {
                         Image(systemName: "location.fill")
@@ -54,20 +61,48 @@ struct InviteView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 24)
                     .padding(.top, 5)
-
+                    
                     // 링크 표시
                     HStack {
                         Image(systemName: "link")
-                        Text("https://BAABo.com")
+                        
+                        Text(inviteURL)
                             .font(.subheadline)
                             .foregroundColor(.gray)
                             .lineLimit(1)
                             .truncationMode(.tail)
+                            .onTapGesture {
+                                guard roomCode != nil else { return }
+                                UIPasteboard.general.string = inviteURL
+                                withAnimation {
+                                    urlCopied = true
+                                }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                    urlCopied = false
+                                }
+                            }
+                        
+                        if urlCopied {
+                            Text("복사됨!")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                                .transition(.opacity)
+                        }
+                        
                         Spacer()
+                        
+                        Button(action: {
+                            guard roomCode != nil else { return }
+                            shareURL(inviteURL)
+                        }) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.title2)
+                                .foregroundColor(.orange)
+                        }
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, -10)
-
+                    
                     // 미모지
                     HStack(spacing: -10) {
                         Image("memoji1")
@@ -77,7 +112,7 @@ struct InviteView: View {
                             .clipShape(Circle())
                             .shadow(radius: 5)
                             .offset(x: -1, y: 15)
-
+                        
                         Image("memoji2")
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -85,7 +120,7 @@ struct InviteView: View {
                             .clipShape(Circle())
                             .shadow(radius: 5)
                     }
-
+                    
                     // 카드 영역
                     ZStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 12) {
@@ -97,7 +132,7 @@ struct InviteView: View {
                             }
                             .padding(.top, 40)
                             .padding(.horizontal)
-
+                            
                             // 친구 리스트
                             ScrollView {
                                 VStack(spacing: 12) {
@@ -109,7 +144,7 @@ struct InviteView: View {
                                                 .aspectRatio(contentMode: .fill)
                                                 .frame(width: 40, height: 40)
                                                 .clipShape(Circle())
-
+                                            
                                             VStack(alignment: .leading, spacing: 4) {
                                                 Text(friend.name)
                                                     .fontWeight(.semibold)
@@ -130,7 +165,7 @@ struct InviteView: View {
                                     }
                                 }
                             }
-
+                            
                             Spacer()
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -138,16 +173,16 @@ struct InviteView: View {
                         .cornerRadius(30, corners: [.topLeft, .topRight])
                         .shadow(radius: 5)
                         .ignoresSafeArea(edges: .bottom)
-
+                        
                         // 떠나자 버튼 + NavigationLink
                         HStack {
                             Spacer()
-
+                            
                             NavigationLink(destination: CategoryView(), isActive: $isNavigatingToCategory) {
                                 EmptyView()
                             }
                             .hidden()
-
+                            
                             Button(action: {
                                 isNavigatingToCategory = true
                             }) {
@@ -163,7 +198,7 @@ struct InviteView: View {
                                 .cornerRadius(12)
                                 .shadow(radius: 3)
                             }
-
+                            
                             Spacer()
                         }
                         .offset(y: -30)
@@ -172,6 +207,20 @@ struct InviteView: View {
                 }
             }
             .onAppear {
+                // 방 코드 없으면 생성 요청
+                if roomCode == nil {
+                    RoomService.createRoom { id in
+                        DispatchQueue.main.async {
+                            if let id = id {
+                                roomCode = id
+                            } else {
+                                print("방 생성 실패")
+                            }
+                        }
+                    }
+                }
+                
+                //
                 timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
                     if invitedFriends.count < 6 {
                         withAnimation {
@@ -194,20 +243,31 @@ struct InviteView: View {
             }
         }
     }
+    
+    // iOS 공유 시트 띄우기
+    func shareURL(_ urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(activityVC, animated: true)
+        }
+    }
 }
 
 // MARK: - 설정 팝업 뷰
 struct FriendSettingView: View {
     @Binding var friend: Friend
     @Binding var isPresented: Bool
-
+    
     var body: some View {
         VStack(spacing: 20) {
             ZStack {
                 Text("마이페이지")
                     .font(.title)
                     .fontWeight(.bold)
-
+                
                 HStack {
                     Spacer()
                     Button(action: {
@@ -220,14 +280,14 @@ struct FriendSettingView: View {
                 }
             }
             .padding(.horizontal)
-
+            
             Image(friend.imageName)
                 .resizable()
                 .frame(width: 100, height: 100)
                 .clipShape(Circle())
                 .shadow(radius: 5)
                 .padding()
-
+            
             VStack(alignment: .leading, spacing: 12) {
                 Text("이름")
                     .font(.headline)
@@ -235,10 +295,10 @@ struct FriendSettingView: View {
                     .padding()
                     .background(Color(.systemGray5))
                     .cornerRadius(12)
-
+                
                 Toggle("못 먹는 음식 설정", isOn: $friend.showFood)
                     .font(.headline)
-
+                
                 if friend.showFood {
                     TextField("못 먹는 음식 입력", text: $friend.foodToAvoid)
                         .padding()
@@ -247,7 +307,7 @@ struct FriendSettingView: View {
                 }
             }
             .padding(.horizontal)
-
+            
             Button("저장") {
                 isPresented = false
             }
@@ -258,7 +318,7 @@ struct FriendSettingView: View {
             .foregroundColor(.black)
             .cornerRadius(12)
             .padding(.horizontal)
-
+            
             Spacer()
         }
         .padding()
@@ -269,7 +329,7 @@ struct FriendSettingView: View {
 struct RoundedCorner: Shape {
     var radius: CGFloat = .infinity
     var corners: UIRectCorner = .allCorners
-
+    
     func path(in rect: CGRect) -> Path {
         let path = UIBezierPath(
             roundedRect: rect,
