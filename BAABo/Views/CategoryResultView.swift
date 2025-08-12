@@ -20,18 +20,15 @@ struct CategoryResultView: View {
                     .font(.system(size: 40, weight: .bold))
                     .padding()
                 ZStack {    // 결과 카테고리 표시
-                    Circle()
-                        .frame(width:327, height:327)
-                        .foregroundColor(Color("2_greenColor"))
-                    Image("아시안")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 200, height: 200)
+                    
+                    Text("🍜")
+                            .font(.system(size: 150))
                 }
                 Text("아시안")     // 결과 카테고리 텍스트
                     .font(.system(size: 32, weight: .bold))
                     .padding(.bottom, 30)
                 
+               
                 // 식당 보러 가기 버튼
                 Button(action:{
                     moveToPlaceView = true
@@ -50,9 +47,10 @@ struct CategoryResultView: View {
                     .foregroundColor(.black)
                     .padding()
                     .frame(width: 337, height: 101)
-                    .background(Color(.accent))
+                    .background(Color.orange)
                     .cornerRadius(20)
                 }
+                .padding(.top, 50)
             }
             .navigationBarBackButtonHidden(true)
             .navigationDestination(isPresented: $moveToPlaceView) {
@@ -64,4 +62,4 @@ struct CategoryResultView: View {
 
 #Preview {
     CategoryResultView()
-}
+} 

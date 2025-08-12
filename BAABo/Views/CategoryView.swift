@@ -52,7 +52,7 @@ struct CategoryView: View {
                     Spacer()
                     ZStack {    // 타이머
                         Circle()
-                            .fill(timerEnded ? Color(.accent) : Color("2_greenColor"))  // 타이머 활성화 여부에 따라 버튼 색 변경
+                            .fill(timerEnded ? Color(.orange) : Color("2_greenColor"))  // 타이머 활성화 여부에 따라 버튼 색 변경
                             .frame(width:35, height:35)
                         Image(systemName: "timer")
                             .resizable()
@@ -148,7 +148,7 @@ struct CategoryView: View {
                     }
                     .foregroundColor(.black)
                     .frame(width: 337, height: 101)
-                    .background(timerEnded ? Color(.accent) : Color("1_grayColor"))
+                    .background(timerEnded ? Color(.orange) : Color("1_grayColor"))
                     .cornerRadius(20)
                     
                 }
