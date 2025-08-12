@@ -212,7 +212,7 @@ struct CategoryView: View {
                                         .bold()
                                         .frame(width: 20, height: 20)
                                 }
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                                 .padding()
                                 .frame(width: 239, height: 58)
                                 .background(Color.orange)
