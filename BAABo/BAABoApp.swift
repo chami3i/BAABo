@@ -11,6 +11,9 @@ import FirebaseAuth
 
 @main
 struct BAABoApp: App {
+    
+    @StateObject var router = Router()
+    
     init() {
         print("🔥 Firebase 초기화 시도")
         FirebaseApp.configure()
@@ -20,8 +23,18 @@ struct BAABoApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(router)
+                .onOpenURL { url in
+                    // URL 예: myapp://join/ABC123
+                    if url.host == "join", let roomId = url.pathComponents.dropFirst().first {
+                        router.isHost = false
+                        router.currentRoomId = roomId
+                        router.selectedLocation = "현재 위치"
+                        router.navigateToInviteView = true
+                    }
+                }
         }
     }
     
-
+    
 }
