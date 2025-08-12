@@ -47,6 +47,12 @@ struct MapView: View {
                         .onChange(of: viewModel.region.center) { _, newCenter in
                             search.center = newCenter
                         }
+                        .onAppear {
+                            viewModel.requestLocationAccess()
+                            // 초기 진입 시 현재 지도 중심/반경을 공유 상태에 세팅
+                            search.center = viewModel.region.center
+                            search.radius = Int(viewModel.radiusInMeters)
+                        }
 
                     
                     GeometryReader { geo in
@@ -120,12 +126,6 @@ struct MapView: View {
                     .zIndex(10)
                 }
                 .ignoresSafeArea(.keyboard)
-                .onAppear {
-                    viewModel.requestLocationAccess()
-                    // 초기 진입 시 현재 지도 중심/반경을 공유 상태에 세팅
-                    search.center = viewModel.region.center
-                    search.radius = Int(viewModel.radiusInMeters)
-                }
                 
                 // ✅ 하단 고정 슬라이더 + 버튼
                 VStack {
@@ -134,6 +134,9 @@ struct MapView: View {
                         HStack {
                             Text("0m")
                             Slider(value: $viewModel.radiusInMeters, in: 0...1000, step: 50)
+                                .onChange(of: viewModel.radiusInMeters) { _, newValue in
+                                    search.radius = Int(newValue)
+                                }
                             Text("1km")
                         }
                         

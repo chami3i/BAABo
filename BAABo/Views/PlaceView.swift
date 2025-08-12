@@ -9,13 +9,12 @@ import SwiftUI
 import CoreLocation
 import Foundation
 
+
+private let FALLBACK_COORD = CLLocationCoordinate2D(latitude: 37.561, longitude: 126.946)
+
 // MARK: - View
 struct PlaceView: View {
     @EnvironmentObject var search: SearchContext
-
-    // 입력
-    var category: String
-    var radius: Int = 1000   // 검색 반경(m)
 
     // 타이머
     @State private var remainingTime: Int = 120
@@ -26,7 +25,6 @@ struct PlaceView: View {
     @State private var moveToPlaceResultView: Bool = false
 
     // 데이터
-    @StateObject private var locationManager = SimpleLocationManager()
     @State private var places: [KakaoKeywordPlace] = []
     @State private var isLoading = false
     @State private var loadError: String?
@@ -36,7 +34,7 @@ struct PlaceView: View {
             ScrollView {
                 VStack (spacing: 20){
 
-                    Text("\(category)")
+                    Text(search.category.isEmpty ? "추천" : search.category)
                         .font(.title)
                         .underline()
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -66,14 +64,14 @@ struct PlaceView: View {
                     // 식당 카드 영역 (동적)
                     VStack(alignment: .leading, spacing: 20) {
                         if isLoading {
-                            ProgressView("주변 \(category) 검색 중...")
+                            ProgressView("주변 검색 중...")
                                 .frame(maxWidth: .infinity, alignment: .center)
                         } else if let err = loadError {
                             Text("불러오는 중 오류가 발생했어요: \(err)")
                                 .foregroundColor(.red)
                                 .fixedSize(horizontal: false, vertical: true)
                         } else if places.isEmpty {
-                            Text("주변에 표시할 \(category) 결과가 없어요.")
+                            Text("주변에 표시할 결과가 없어요.")
                                 .foregroundColor(.gray)
                         } else {
                             ForEach(places) { place in
@@ -88,10 +86,10 @@ struct PlaceView: View {
                                     ImageCardView(
                                         imageName: "placeholder-restaurant",
                                         title: place.place_name,
-                                        category: place.category_name ?? category,
+                                        category: place.category_name ?? "",
                                         status: "영업 정보 없음",
                                         hours: place.phone ?? "",
-                                        rating: "4.5", // 카카오 응답에 평점 없음 → 임시
+                                        rating: "4.5",
                                         isEnabled: timerActive
                                     )
                                 }
@@ -130,29 +128,26 @@ struct PlaceView: View {
                 timerActive = false
             }
         }
-        // 위치 변동 시 검색
-        .onChange(of: locationManager.lastLocation) { _, loc in
-            guard let loc else { return }
-            fetchKakaoPlaces(center: loc.coordinate, category: category, radius: radius)
-        }
-        .onAppear {
-            // 최초 진입 시 권한 요청 및 검색 트리거
-            locationManager.requestIfNeeded()
-            if let loc = locationManager.lastLocation {
-                fetchKakaoPlaces(center: loc.coordinate, category: category, radius: radius)
-            }
-        }
+        // 검색 트리거
+        .onAppear { runSearch() }
+        .onChange(of: search.center) { _, _ in runSearch() }
+        .onChange(of: search.radius) { _, _ in runSearch() }
+        .onChange(of: search.category) { _, _ in runSearch() }
     }
 
     // MARK: - Data Load
-    private func fetchKakaoPlaces(center: CLLocationCoordinate2D, category: String, radius: Int) {
+    private func runSearch() {
+        guard let center = search.center ?? Optional(FALLBACK_COORD) else { return }
+        let radius = min(max(search.radius, 1), 2000)
+        let query = search.category.isEmpty ? "맛집" : search.category
+        
         isLoading = true
         loadError = nil
 
         Task {
             do {
                 let result = try await KakaoPlaceService.shared.search(
-                    query: category,
+                    query: query,
                     center: center,
                     radius: radius
                 )
@@ -323,45 +318,46 @@ final class KakaoPlaceService {
     }
 }
 
-// MARK: - Simple Location Manager (이름 충돌 방지용)
-final class SimpleLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
-    private let manager = CLLocationManager()
-    @Published var lastLocation: CLLocation?
-
-    override init() {
-        super.init()
-        manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-    }
-
-    func requestIfNeeded() {
-        switch manager.authorizationStatus {
-        case .notDetermined:
-            manager.requestWhenInUseAuthorization()
-        case .authorizedAlways, .authorizedWhenInUse:
-            manager.startUpdatingLocation()
-        default:
-            break
-        }
-    }
-
-    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
-            self.manager.startUpdatingLocation()
-        }
-    }
-
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let last = locations.last {
-            DispatchQueue.main.async { self.lastLocation = last }
-        }
-    }
-
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location error: \(error.localizedDescription)")
-    }
-}
+/// MARK: - Simple Location Manager (이름 충돌 방지용)
+//final class SimpleLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+//    private let manager = CLLocationManager()
+//    @Published var lastLocation: CLLocation?
+//
+//    override init() {
+//        super.init()
+//        manager.delegate = self
+//        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+//    }
+//
+//    func requestIfNeeded() {
+//        switch manager.authorizationStatus {
+//        case .notDetermined:
+//            manager.requestWhenInUseAuthorization()
+//        case .authorizedAlways, .authorizedWhenInUse:
+//            manager.startUpdatingLocation()
+//        default:
+//            break
+//        }
+//    }
+//
+//    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+//        if manager.authorizationStatus == .authorizedWhenInUse || manager.authorizationStatus == .authorizedAlways {
+//            self.manager.startUpdatingLocation()
+//        }
+//    }
+//
+//    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+//        if let last = locations.last {
+//            DispatchQueue.main.async { self.lastLocation = last }
+//        }
+//    }
+//
+//    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+//        print("Location error: \(error.localizedDescription)")
+//    }
+//}
 
 #Preview {
-    PlaceView(category: "돈가스·회·일식")
+    PlaceView()
+        .environmentObject(SearchContext())
 }
