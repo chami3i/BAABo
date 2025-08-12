@@ -8,13 +8,36 @@
 import SwiftUI
 
 struct HomeTodayMenuView: View {
-    private var todayMenu: TodayMenuItem {
-        menuItems.randomElement()!
-    }
+    private let todayMenu: TodayMenuItem
+    
+    init() {
+            let todayString = DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .none)
+
+            // UserDefaults에서 마지막 저장 날짜 확인
+            let savedDate = UserDefaults.standard.string(forKey: "todayMenuDate")
+
+            if savedDate == todayString {
+                // 오늘 날짜면 메뉴를 그대로 유지
+                let savedName = UserDefaults.standard.string(forKey: "todayMenuName") ?? ""
+                if let matchedMenu = menuItems.first(where: { $0.name == savedName }) {
+                    self.todayMenu = matchedMenu
+                } else {
+                    // 데이터 손상 시 새로 선택
+                    let newMenu = menuItems.randomElement()!
+                    self.todayMenu = newMenu
+                    UserDefaults.standard.set(newMenu.name, forKey: "todayMenuName")
+                    UserDefaults.standard.set(todayString, forKey: "todayMenuDate")
+                }
+            } else {
+                // 날짜가 바뀌었으면 새로 선택
+                let newMenu = menuItems.randomElement()!
+                self.todayMenu = newMenu
+                UserDefaults.standard.set(newMenu.name, forKey: "todayMenuName")
+                UserDefaults.standard.set(todayString, forKey: "todayMenuDate")
+            }
+        }
     
     var body: some View {
-        
-        
         
         VStack(alignment: .leading, spacing: 8) {
             Text("오늘의 메뉴 추천")
@@ -52,4 +75,9 @@ struct HomeTodayMenuView: View {
         }
         
     }
+    private static var dateFormatter: DateFormatter = {
+           let formatter = DateFormatter()
+           formatter.dateFormat = "yyyy-MM-dd" // 하루 단위 비교용
+           return formatter
+       }()
 }
