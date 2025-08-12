@@ -142,11 +142,10 @@ struct InviteView: View {
                         // 떠나자 버튼 + NavigationLink
                         HStack {
                             Spacer()
-
-                            NavigationLink(destination: CategoryView(), isActive: $isNavigatingToCategory) {
-                                EmptyView()
-                            }
-                            .hidden()
+//                            NavigationLink(destination: CategoryView(), isActive: $isNavigatingToCategory) {
+//                                EmptyView()
+//                            }
+//                            .hidden()
 
                             Button(action: {
                                 isNavigatingToCategory = true
@@ -169,6 +168,9 @@ struct InviteView: View {
                         .offset(y: -30)
                     }
                     .padding(.top, 50)
+                    .navigationDestination(isPresented: $isNavigatingToCategory)  {
+                        CategoryView()
+                    }
                 }
             }
             .onAppear {
@@ -288,6 +290,6 @@ extension View {
 
 // MARK: - 프리뷰
 #Preview {
-    // InviteView()
+//    InviteView()
 }
 

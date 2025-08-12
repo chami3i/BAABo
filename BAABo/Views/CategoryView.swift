@@ -175,7 +175,7 @@ struct CategoryView: View {
                     .disabled(!timerEnded)  // 타이머 끝나야 버튼 활성화
                 }
                 .padding(.horizontal, 20)   // 전체 화면에서 좌우 여백 조정
-                //            .navigationBarBackButtonHidden(true)
+                .navigationBarBackButtonHidden(true)
                 //            .navigationDestination(isPresented: $navigateToResult) {
                 //                CategoryResultView()
                 
