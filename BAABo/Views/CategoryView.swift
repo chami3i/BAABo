@@ -45,8 +45,10 @@ struct CategoryView: View {
                 // MARK: 상단바
                 HStack {
                     Text("카테고리 선택")     // 페이지 이름
-                        .font(.system(size: 30, weight: .bold))
-                        .bold()
+                        //.font(.system(size: 30, weight: .bold))
+                        //.bold()
+                        .font(.title)
+                        .fontWeight(.bold)
                     Spacer()
                     ZStack {    // 타이머
                         Circle()
@@ -102,7 +104,9 @@ struct CategoryView: View {
                             .scaledToFit()
                             .frame(width: 67, height: 67)
                         Text("다~좋아!")
-                            .font(.system(size: 32))
+                            //.font(.system(size: 32))
+                            .font(.title)
+                            
                     }
                     .foregroundColor(.black)
                     .padding()
@@ -133,7 +137,8 @@ struct CategoryView: View {
                 }) {
                     HStack {
                         Text(timerEnded ? "결과 보기" : String(format: "00:%02d 후 결과 보기", timeRemaining))   // 버튼에서 남은 시간 텍스트로 보여주기
-                            .font(.system(size: 30, weight: .bold))
+                          //  .font(.system(size: 30, weight: .bold))
+                            .font(.title)
                             .bold()
                         Image(systemName: "arrow.right.circle")
                             .resizable()
@@ -153,6 +158,7 @@ struct CategoryView: View {
             .navigationDestination(isPresented: $navigateToResult) {
                 CategoryResultView()
             }
+            .navigationBarBackButtonHidden(true)
         }
     }
     // MARK: 카테고리 선택 처리 함수
