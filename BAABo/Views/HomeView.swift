@@ -12,6 +12,8 @@ struct HomeView: View {
     @State private var didLike: Bool? = nil
     // 퀘스트 상태 저장 (획득 여부)
     @State private var collected: [Bool] = Array(repeating: false, count: 9)
+    // 오늘의 메뉴는 최초 한 번만 선택해 보관
+    @State private var todayMenu: TodayMenuItem? = nil
     
     let nickname = "홍길동"
     let place = "오모오모 신세계점"
@@ -40,7 +42,7 @@ struct HomeView: View {
         Person(name: "렌", imageName: nil),
     ]
     
-    // 프로필 배경 색상
+    // 프로필 배경 색상 팔레트
     let gradientColors: [[Color]] = [
         [Color.red, Color.orange],
         [Color.blue, Color.purple],
@@ -49,8 +51,10 @@ struct HomeView: View {
         [Color.indigo, Color.mint]
     ]
     
-    var randomGradient: [Color] {
-        gradientColors.randomElement() ?? [Color.gray, Color.gray]
+    // 이름 기반으로 고정 그라데이션 선택
+    func gradientFor(_ name: String) -> [Color] {
+        let idx = abs(name.hashValue) % gradientColors.count
+        return gradientColors[idx]
     }
     
     let menuItems: [TodayMenuItem] = [
@@ -62,16 +66,9 @@ struct HomeView: View {
         TodayMenuItem(name: "샐러드", category: "양식", emoji: "🥗", description: "칼로리 걱정 없이 든든하게, 신선함 가득한 샐러드 한 그릇")
     ]
     
-    func getTodayMenu() -> TodayMenuItem {
-        return menuItems.randomElement()!
-    }
-    
     @State private var isNavigating = false
     
     var body: some View {
-        
-        let todayMenu = getTodayMenu()
-        
         NavigationStack {
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 16) {
@@ -104,16 +101,13 @@ struct HomeView: View {
                                 .background(Color.white)
                                 .cornerRadius(20)
                             }
-                            
-                            
                         }
                         .padding(.horizontal, 30)
                     }
                     
                     Spacer()
                     
-                    
-                    // 🥘 오늘의 메뉴 추천
+                    // 🥘 오늘의 메뉴 추천 (한 번만 선택한 값을 표시)
                     VStack(alignment: .leading, spacing: 8) {
                         Text("오늘의 메뉴 추천")
                             .font(.headline)
@@ -126,27 +120,29 @@ struct HomeView: View {
                             .fill(Color.gray.opacity(0.1))
                             .frame(height: 120)
                             .overlay(
-                                HStack(spacing: 16) {
-                                    
-                                    // 음식 이모지
-                                    Text(todayMenu.emoji)
-                                        .font(.system(size: 48))
-                                    
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        // 메뉴 이름
-                                        Text(todayMenu.name)
-                                            .font(.title3)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.black)
-                                        
-                                        // 간단한 설명
-                                        Text(todayMenu.description)
-                                            .font(.subheadline)
-                                            .foregroundColor(.gray)
-                                            .lineLimit(2)
+                                Group {
+                                    if let menu = todayMenu {
+                                        HStack(spacing: 16) {
+                                            Text(menu.emoji)
+                                                .font(.system(size: 48))
+                                            
+                                            VStack(alignment: .leading, spacing: 6) {
+                                                Text(menu.name)
+                                                    .font(.title3)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundColor(.black)
+                                                Text(menu.description)
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.gray)
+                                                    .lineLimit(2)
+                                            }
+                                        }
+                                        .padding(.horizontal, 20)
+                                    } else {
+                                        ProgressView()
+                                            .frame(maxWidth: .infinity)
                                     }
                                 }
-                                    .padding(.horizontal, 20)
                             )
                     }
                     
@@ -158,46 +154,46 @@ struct HomeView: View {
                             .font(.headline)
                             .fontWeight(.semibold)
                             .foregroundColor(.black)
-                        
+
                         Spacer()
-                        
+
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                             ForEach(0..<quests.count, id: \.self) { index in
-                                VStack(spacing: 8) {
-                                    Button(action: {
+                                Button {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                         collected[index].toggle()
-                                    }) {
+                                    }
+                                } label: {
+                                    VStack(spacing: 8) {
                                         ZStack {
                                             Circle()
-                                                .fill(collected[index] ? Color.orange : Color.gray.opacity(0.1))
-                                                .frame(width: 100, height: 100)
-                                                .shadow(radius: collected[index] ? 4 : 0)
+                                                .fill(collected[index] ? Color.orange : Color.gray.opacity(0.25))
                                             
-                                            if collected[index] {
-                                                Image(systemName: "star.fill")
-                                                    .foregroundColor(.white)
-                                                    .font(.title)
-                                            }
+                                            Image(systemName: "star.fill") // 별은 항상 흰색, 테두리 없음
+                                                .font(.system(size: 34, weight: .bold))
+                                                .foregroundColor(.white)
                                         }
+                                        .frame(width: 100, height: 100)
+                                        .clipShape(Circle())        // ✅ 사각형 아티팩트 제거
+                                        .contentShape(Circle())     // ✅ 히트영역도 원
+                                        .compositingGroup()         // ✅ 오프스크린 컴포지팅
+                                        .shadow(radius: collected[index] ? 4 : 0)
+
+                                        Text(quests[index])
+                                            .font(.caption)
+                                            .multilineTextAlignment(.center)
+                                            .frame(width: 80, height: 34)
                                     }
-                                    
-                                    // 퀘스트 텍스트
-                                    Text(quests[index])
-                                        .font(.caption)
-                                        .multilineTextAlignment(.center)
-                                        .frame(width: 80, height: 34)
                                 }
+                                .buttonStyle(.plain) // 기본 버튼 효과 제거
                             }
                         }
                     }
-                    
-                    Spacer()
-                    
+
                     // 📝 최근 방문 식당 리뷰
                     VStack(alignment: .leading, spacing: 8) {
                         Text("\(nickname)님, 최근에 방문하신\n\(place) 어떠셨어요?")
                             .font(.title3)
-                            
                             .fontWeight(.semibold)
                             .foregroundColor(.black)
                         
@@ -208,34 +204,30 @@ struct HomeView: View {
                             Button(action: {
                                 didLike = true
                             }) {
-                                HStack {
-                                    Text("👍")
-                                }
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(didLike == true ? Color.green.opacity(0.2) : Color.gray.opacity(0.1))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(didLike == true ? Color.green : Color.clear, lineWidth: 1)
-                                )
+                                HStack { Text("👍") }
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(didLike == true ? Color.green.opacity(0.2) : Color.gray.opacity(0.1))
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(didLike == true ? Color.green : Color.clear, lineWidth: 1)
+                                    )
                             }
                             
                             // 👎 싫었다 버튼
                             Button(action: {
                                 didLike = false
                             }) {
-                                HStack {
-                                    Text("👎")
-                                }
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(didLike == false ? Color.red.opacity(0.2) : Color.gray.opacity(0.1))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(didLike == false ? Color.red : Color.clear, lineWidth: 1)
-                                )
+                                HStack { Text("👎") }
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(didLike == false ? Color.red.opacity(0.2) : Color.gray.opacity(0.1))
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(didLike == false ? Color.red : Color.clear, lineWidth: 1)
+                                    )
                             }
                         }
                     }
@@ -260,13 +252,12 @@ struct HomeView: View {
                                         Text("버거킹 포항공대점")
                                             .font(.headline)
                                             .foregroundColor(.black)
-                                        
                                         Text("경북 포항시 남구 청암로 77 · 11:00 - 20:00")
                                             .font(.caption)
                                             .foregroundColor(.gray)
                                     }
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8),
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8),
                                     alignment: .leading
                                 )
                             
@@ -279,13 +270,12 @@ struct HomeView: View {
                                         Text("탐솥 효자점")
                                             .font(.headline)
                                             .foregroundColor(.black)
-                                        
                                         Text("경북 포항시 남구 효자동길5번길 17 · 11:00 - 21:00")
                                             .font(.caption)
                                             .foregroundColor(.gray)
                                     }
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8),
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8),
                                     alignment: .leading
                                 )
                             
@@ -298,13 +288,12 @@ struct HomeView: View {
                                         Text("수가성")
                                             .font(.headline)
                                             .foregroundColor(.black)
-                                        
                                         Text("경북 포항시 북구 상대로 31 · 00:00 - 24:00")
                                             .font(.caption)
                                             .foregroundColor(.gray)
                                     }
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8),
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8),
                                     alignment: .leading
                                 )
                         }
@@ -331,19 +320,18 @@ struct HomeView: View {
                                             .frame(width: 80, height: 80)
                                             .clipShape(Circle())
                                     } else {
-                                        // ✅ 이미지가 없는 경우: 그라데이션 + 이니셜
+                                        // ✅ 이미지가 없는 경우: 이름 기반 고정 그라데이션 + 이니셜
                                         ZStack {
                                             Circle()
                                                 .fill(
                                                     LinearGradient(
-                                                        gradient: Gradient(colors: randomGradient),
+                                                        gradient: Gradient(colors: gradientFor(person.name)),
                                                         startPoint: .topLeading,
                                                         endPoint: .bottomTrailing
                                                     )
                                                 )
                                                 .frame(width: 70, height: 70)
                                             
-                                            // 이름의 첫 글자 또는 아이콘
                                             Text(String(person.name.prefix(1)))
                                                 .font(.headline)
                                                 .foregroundColor(.white)
@@ -359,12 +347,16 @@ struct HomeView: View {
                     }
                     
                     Spacer().frame(height: 100)
-                    
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 10)
                 .navigationDestination(isPresented: $isNavigating) {
                     MapView()
+                }
+            }
+            .onAppear {
+                if todayMenu == nil {
+                    todayMenu = menuItems.randomElement()
                 }
             }
         }
