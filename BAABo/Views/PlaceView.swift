@@ -11,6 +11,7 @@ import Foundation
 
 // MARK: - View
 struct PlaceView: View {
+    @EnvironmentObject var search: SearchContext
 
     // 입력
     var category: String
