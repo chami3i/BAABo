@@ -7,25 +7,25 @@ struct LocationMarker: Identifiable {
 }
 
 struct MapView: View {
+    @EnvironmentObject var router: Router
     @StateObject private var viewModel = MapViewModel()
-    @State private var navigateToInvite = false
-    @State private var selectedLocationName: String = ""   // ✅ 추가
+    @State private var selectedLocationName: String = ""
     
-    private var canConfirm: Bool { !selectedLocationName.isEmpty } // ✅ 추가
+    private var canConfirm: Bool { !selectedLocationName.isEmpty }
     
     let roomId: String
     
     var body: some View {
         NavigationStack {
-            NavigationLink(
-                destination: InviteView(location: selectedLocationName), // ✅ 전달
-                isActive: $navigateToInvite,      // true가 되면 push
-                label: { EmptyView() }
-            )
-            .hidden()
-            
             ZStack {
-                // ✅ 지도 및 중심 원
+//                NavigationLink(
+//                    destination: InviteView(location: selectedLocationName),
+//                    isActive: $navigateToInvite,      // true가 되면 push
+//                    label: { EmptyView() }
+//                )
+//                .hidden()
+                
+                // 지도 및 중심 원
                 ZStack(alignment: .top) {
                     Map(coordinateRegion: $viewModel.region,
                         interactionModes: .all,
@@ -56,7 +56,7 @@ struct MapView: View {
                     }
                     .allowsHitTesting(false)
                     
-                    // ✅ 검색창 + 자동완성 리스트
+                    // 검색
                     VStack(spacing: 0) {
                         // 검색창
                         HStack {
@@ -82,7 +82,7 @@ struct MapView: View {
                                 VStack(spacing: 0) {
                                     ForEach(viewModel.completions, id: \.self) { item in
                                         Button {
-                                            selectedLocationName = item.title   // ✅ 위치 저장
+                                            selectedLocationName = item.title // 위치 저장
                                             viewModel.searchLocation(from: item)
                                         } label: {
                                             VStack(alignment: .leading) {
@@ -116,7 +116,7 @@ struct MapView: View {
                     viewModel.requestLocationAccess()
                 }
                 
-                // ✅ 하단 고정 슬라이더 + 버튼
+                // 하단 고정 슬라이더 + 버튼
                 VStack {
                     Spacer()
                     VStack(spacing: 10) {
@@ -129,16 +129,20 @@ struct MapView: View {
                         Button("확정") {
                             RoomService.updateRoomLocation(roomId: roomId, location: selectedLocationName) { success in
                                 if success {
-                                    navigateToInvite = true
+                                    DispatchQueue.main.async {
+                                        router.selectedLocation = selectedLocationName
+                                        router.navigateToInviteView = true
+                                        router.navigateToMapView = false
+                                    }
                                 }
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(canConfirm ? Color.orange : Color.gray.opacity(0.5)) // ✅ 비활성화 색상
+                        .background(canConfirm ? Color.orange : Color.gray.opacity(0.5)) // 비활성화 색상
                         .foregroundColor(.white)
                         .cornerRadius(12)
-                        .disabled(!canConfirm)                                          // ✅ 비활성화 로직
+                        .disabled(!canConfirm)
                         .animation(.default, value: canConfirm)
                     }
                     .padding()
