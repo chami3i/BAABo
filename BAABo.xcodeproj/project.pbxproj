@@ -16,22 +16,9 @@
 		64B0C32D2E4095EF0038CFC8 /* BAABo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BAABo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A2E1E3E32E4B231A00AE7E63 /* Exceptions for "BAABo" folder in "BAABo" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 64B0C32C2E4095EF0038CFC8 /* BAABo */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		64B0C32F2E4095EF0038CFC8 /* BAABo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				A2E1E3E32E4B231A00AE7E63 /* Exceptions for "BAABo" folder in "BAABo" target */,
-			);
 			path = BAABo;
 			sourceTree = "<group>";
 		};
