@@ -2,24 +2,25 @@
 //  AppConfig.swift
 //  BAABo
 //
-//  Created by chaem on 8/12/25.
-//
 
 import Foundation
 
-private struct Secrets: Decodable {
+private struct AppSecrets: Decodable {
     let KAKAO_REST_API_KEY: String
 }
 
 enum AppConfig {
-    static var kakaoRestAPIKey: String = {
+    // Secrets.plist에서 카카오 REST API 키를 읽어옴
+    static let kakaoRestAPIKey: String = {
         guard
             let url = Bundle.main.url(forResource: "Secrets", withExtension: "plist"),
             let data = try? Data(contentsOf: url),
-            let secrets = try? PropertyListDecoder().decode(Secrets.self, from: data)
+            let secrets = try? PropertyListDecoder().decode(AppSecrets.self, from: data),
+            !secrets.KAKAO_REST_API_KEY.isEmpty
         else {
-            fatalError("Missing/invalid Secrets.plist")
+            assertionFailure("Missing/invalid Secrets.plist or empty KAKAO_REST_API_KEY (Target Membership/키 이름 확인)")
+            return "" // 비어 있으면 이후 precondition에서 방어
         }
         return secrets.KAKAO_REST_API_KEY
-    } ()
+    }()
 }

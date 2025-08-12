@@ -9,22 +9,6 @@ import SwiftUI
 import CoreLocation
 import Foundation
 
-// MARK: - Secrets Loader (Secrets.plist에서만 읽음)
-enum Secrets {
-    static var kakaoRESTAPIKey: String {
-        guard let url = Bundle.main.url(forResource: "Secrets", withExtension: "plist"),
-              let data = try? Data(contentsOf: url),
-              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-              let key = plist["KAKAO_REST_API_KEY"] as? String,
-              !key.isEmpty
-        else {
-            assertionFailure("❌ Secrets.plist의 KAKAO_REST_API_KEY 로딩 실패. 파일/키 이름/Target Membership 확인")
-            return ""
-        }
-        return key
-    }
-}
-
 // MARK: - View
 struct PlaceView: View {
 
@@ -325,8 +309,8 @@ final class KakaoPlaceService {
 
         var req = URLRequest(url: comps.url!)
         // Secrets 사용
-        let key = Secrets.kakaoRESTAPIKey
-        precondition(!key.isEmpty, "❌ Secrets.plist의 KAKAO_REST_API_KEY가 비어있습니다.")
+        let key = AppConfig.kakaoRestAPIKey
+        precondition(!key.isEmpty, "KAKAO_REST_API_KEY is empty. Check Secrets.plist & Target Membership.")
         req.addValue("KakaoAK \(key)", forHTTPHeaderField: "Authorization")
 
         let (data, resp) = try await URLSession.shared.data(for: req)
