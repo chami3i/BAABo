@@ -52,7 +52,7 @@ struct CategoryView: View {
                     Spacer()
                     ZStack {    // 타이머
                         Circle()
-                            .fill(timerEnded ? Color(.accent) : Color("2_greenColor"))  // 타이머 활성화 여부에 따라 버튼 색 변경
+                            .fill(timerEnded ? Color("4_silverColor") : Color(.accent))  // 타이머 활성화 여부에 따라 버튼 색 변경
                             .frame(width:35, height:35)
                         Image(systemName: "timer")
                             .resizable()
@@ -62,7 +62,7 @@ struct CategoryView: View {
                     }
                     Text(String(format:"00:%02d", timeRemaining))   // 남은 시간
                         .font(.system(size: 27, weight: .semibold))
-                        .foregroundColor(timerEnded ? Color(.accent) : Color("2_greenColor"))
+                        .foregroundColor(timerEnded ? Color("4_silverColor") : Color(.accent))
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 30)   // 상단바와 선택버튼 사이 간격 조정
@@ -155,10 +155,10 @@ struct CategoryView: View {
                 .disabled(!timerEnded)  // 타이머 끝나야 버튼 활성화
             }
             .padding(.horizontal, 20)   // 전체 화면에서 좌우 여백 조정
+            .navigationBarBackButtonHidden(true)
             .navigationDestination(isPresented: $navigateToResult) {
                 CategoryResultView()
             }
-            .navigationBarBackButtonHidden(true)
         }
     }
     // MARK: 카테고리 선택 처리 함수
