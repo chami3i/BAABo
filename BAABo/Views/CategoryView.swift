@@ -71,7 +71,20 @@ struct CategoryView: View {
                             .foregroundColor(timerEnded ? Color("4_silverColor") : Color(.accent))
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 30)   // 상단바와 선택버튼 사이 간격 조정
+                    .padding(.bottom, 10)
+                    
+                    // 카테고리 선택 가이드
+                    HStack {
+                        VStack (alignment: .leading, spacing: 4) {
+                            Text("지금 땡기는 순서대로 pick! 해 보세요.")
+                                .font(.system(size: 13))
+                            Text("(최대 3개 선택 가능)")
+                                .font(.system(size: 10))
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 20)   // 상단바와 선택버튼 사이 간격 조정
                     
                     // MARK: 카테고리 선택 버튼 (정렬)
                     LazyVGrid(columns: columns, spacing:17) {
