@@ -8,26 +8,28 @@
 import SwiftUI
 
 struct MypageView: View {
-    // 고정 시작값
-    @State private var name: String = "바보 2"
+    // 1) 영구 저장되는 값 (UserDefaults)
+    @AppStorage("mypage_name") private var savedName: String = "바보 2"
+    @AppStorage("mypage_showFood") private var savedShowFood: Bool = true
+    @AppStorage("mypage_foodToAvoid") private var savedFoodToAvoid: String = "없음"
+    
+    // 2) 편집용 draft (화면에 바인딩)
+    @State private var name: String = ""
     @State private var showFood: Bool = true
-    @State private var foodToAvoid: String = "없음"
+    @State private var foodToAvoid: String = ""
     
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                // 상단 타이틀 + 닫기(X)
+                // 상단 타이틀
                 ZStack {
                     Text("마이페이지")
                         .font(.title).bold()
-                    HStack {
-                        Spacer()
-                        
-                    }
+                    HStack { Spacer() }
                 }
                 .padding(.top, 40)
                 
-                // 아바타 (Assets에 "memoji1" 이미지 필요)
+                // 아바타
                 Image("memoji2")
                     .resizable()
                     .scaledToFill()
@@ -46,7 +48,7 @@ struct MypageView: View {
                         .autocorrectionDisabled()
                 }
                 
-                // 못 먹는 음식 설정 + 입력
+                // 못 먹는 음식
                 VStack(spacing: 12) {
                     HStack {
                         Text("못 먹는 음식 설정")
@@ -65,9 +67,12 @@ struct MypageView: View {
                 }
                 .padding(.top, 4)
                 
-                // 저장 버튼 (고정형이라 일단 출력만)
+                // 저장 버튼: draft → saved 반영 (이후에도 값 유지됨)
                 Button {
-                    print("저장: \(name), \(showFood ? foodToAvoid : "사용안함")")
+                    savedName = name
+                    savedShowFood = showFood
+                    savedFoodToAvoid = foodToAvoid
+                    print("저장됨: \(savedName), \(savedShowFood ? savedFoodToAvoid : "사용안함")")
                 } label: {
                     Text("저장")
                         .font(.headline)
@@ -78,7 +83,6 @@ struct MypageView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .shadow(radius: 3, y: 1)
                 }
-                
                 .padding(.top, 6)
             }
             .padding(.horizontal, 20)
@@ -86,15 +90,19 @@ struct MypageView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.white.ignoresSafeArea())
+        // 3) 화면 열릴 때 저장된 값으로 draft 동기화
+        .onAppear {
+            name = savedName
+            showFood = savedShowFood
+            foodToAvoid = savedFoodToAvoid
+        }
     }
     
-    // 작은 라벨
     private func label(_ text: String) -> some View {
         Text(text).font(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
-// 공통 필드 스타일
 private extension View {
     func fieldStyle() -> some View {
         self
