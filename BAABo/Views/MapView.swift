@@ -1,6 +1,5 @@
 import SwiftUI
 import MapKit
-import CoreLocation
 
 struct LocationMarker: Identifiable {
     let id = UUID()
@@ -8,11 +7,11 @@ struct LocationMarker: Identifiable {
 }
 
 struct MapView: View {
+    @EnvironmentObject var search: SearchContext
     @StateObject private var viewModel = MapViewModel()
     @State private var navigateToInvite = false
     @State private var selectedLocationName: String = ""   // ✅ 추가
-    
-    @EnvironmentObject var search: SearchContext
+
     
     private var canConfirm: Bool { !selectedLocationName.isEmpty } // ✅ 추가
     
@@ -43,10 +42,12 @@ struct MapView: View {
                     }
                         .edgesIgnoringSafeArea(.all)
                         .ignoresSafeArea(.keyboard)
+                    
                         // 중심 좌표가 바뀔 때마다 공유 상태에 반영
                         .onChange(of: viewModel.region.center) { _, newCenter in
                             search.center = newCenter
                         }
+
                     
                     GeometryReader { geo in
                         let diameter = viewModel.radiusInMeters /
@@ -141,7 +142,6 @@ struct MapView: View {
                             search.center = viewModel.region.center
                             search.radius = Int(viewModel.radiusInMeters)
 
-                            
                             RoomService.updateRoomLocation(roomId: roomId, location: selectedLocationName) { success in
                                 if success {
                                     navigateToInvite = true
@@ -201,4 +201,5 @@ struct MapView: View {
 
 #Preview {
     MapView(roomId: "dummyRoomId123")
+        .environmentObject(SearchContext())
 }
