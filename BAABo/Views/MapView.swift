@@ -8,6 +8,7 @@ struct LocationMarker: Identifiable {
 
 struct MapView: View {
     @EnvironmentObject var router: Router
+    @EnvironmentObject var search: SearchContext
     @StateObject private var viewModel = MapViewModel()
     @State private var selectedLocationName: String = ""
     
@@ -18,13 +19,6 @@ struct MapView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-//                NavigationLink(
-//                    destination: InviteView(location: selectedLocationName),
-//                    isActive: $navigateToInvite,      // true가 되면 push
-//                    label: { EmptyView() }
-//                )
-//                .hidden()
-                
                 // 지도 및 중심 원
                 ZStack(alignment: .top) {
                     Map(coordinateRegion: $viewModel.region,
@@ -40,6 +34,18 @@ struct MapView: View {
                     }
                         .edgesIgnoringSafeArea(.all)
                         .ignoresSafeArea(.keyboard)
+                    
+                        // 중심 좌표가 바뀔 때마다 공유 상태에 반영
+                        .onChange(of: viewModel.region.center) { _, newCenter in
+                            search.center = newCenter
+                        }
+                        .onAppear {
+                            viewModel.requestLocationAccess()
+                            // 초기 진입 시 현재 지도 중심/반경을 공유 상태에 세팅
+                            search.center = viewModel.region.center
+                            search.radius = Int(viewModel.radiusInMeters)
+                        }
+
                     
                     GeometryReader { geo in
                         let diameter = viewModel.radiusInMeters /
@@ -112,9 +118,6 @@ struct MapView: View {
                     .zIndex(10)
                 }
                 .ignoresSafeArea(.keyboard)
-                .onAppear {
-                    viewModel.requestLocationAccess()
-                }
                 
                 // 하단 고정 슬라이더 + 버튼
                 VStack {
@@ -123,10 +126,17 @@ struct MapView: View {
                         HStack {
                             Text("0m")
                             Slider(value: $viewModel.radiusInMeters, in: 0...1000, step: 50)
+                                .onChange(of: viewModel.radiusInMeters) { _, newValue in
+                                    search.radius = Int(newValue)
+                                }
                             Text("1km")
                         }
                         
                         Button("확정") {
+                            // 확정 시, 최종 좌표/반경을 한 번 더 기록(안전)
+                            search.center = viewModel.region.center
+                            search.radius = Int(viewModel.radiusInMeters)
+
                             RoomService.updateRoomLocation(roomId: roomId, location: selectedLocationName) { success in
                                 if success {
                                     DispatchQueue.main.async {
@@ -190,4 +200,5 @@ struct MapView: View {
 
 #Preview {
     MapView(roomId: "dummyRoomId123")
+        .environmentObject(SearchContext())
 }

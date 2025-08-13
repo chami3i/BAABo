@@ -13,6 +13,7 @@ import FirebaseAuth
 struct BAABoApp: App {
     
     @StateObject var router = Router()
+    @StateObject private var searchContext = SearchContext()
     
     init() {
         FirebaseApp.configure()
@@ -23,6 +24,7 @@ struct BAABoApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(router)
+                .environmentObject(searchContext) // 전역 공유
                 .onOpenURL { url in
                     // 커스텀 스킴 예: baabo://join/ABC123
                     let host = url.host?.lowercased() ?? ""
