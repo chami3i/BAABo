@@ -17,7 +17,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A2E1E3E32E4B231A00AE7E63 /* Exceptions for "BAABo" folder in "BAABo" target */ = {
+		7EBAB1D42E4B6FDB00F4287A /* Exceptions for "BAABo" folder in "BAABo" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -30,7 +30,7 @@
 		64B0C32F2E4095EF0038CFC8 /* BAABo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				A2E1E3E32E4B231A00AE7E63 /* Exceptions for "BAABo" folder in "BAABo" target */,
+				7EBAB1D42E4B6FDB00F4287A /* Exceptions for "BAABo" folder in "BAABo" target */,
 			);
 			path = BAABo;
 			sourceTree = "<group>";

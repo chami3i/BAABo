@@ -3,3 +3,15 @@ BAABo.xcodeproj/project.xcworkspace/xcuserdata/hyeonjin.xcuserdatad/UserInterfac
 BAABo.xcodeproj/project.xcworkspace/xcuserdata/wren.xcuserdatad/UserInterfaceState.xcuserstate
 BAABo.xcodeproj/xcuserdata/wren.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
 BAABo/Config/Secrets.plist
+
+# Xcode user-specific files (개인 설정)
+xcuserdata/
+*.xcuserstate
+
+# macOS
+.DS_Store
+
+# 빌드 산출물(옵션)
+DerivedData/
+.build/
+
