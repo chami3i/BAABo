@@ -12,7 +12,7 @@ struct Person {
     let imageName: String?
 }
 
-struct TodayMenuItem {
+struct TodayMenuItem: Codable {
     let name: String
     let category: String
     let emoji: String
