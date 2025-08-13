@@ -247,6 +247,24 @@ private struct ImageCardView: View {
     var onVote: () -> Void
 
     @State private var isFavorite = false
+    
+    private var displayCategory: String {
+        let trimmed = category.trimmingCharacters(in: .whitespacesAndNewlines)
+        // 카테고리 문자열을 '>' 기준으로 분해하되, 양옆 공백 제거
+        let parts = trimmed
+            .split(separator: ">")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        if parts.isEmpty { return trimmed }
+        // 첫 토큰이 "음식점"을 포함하면 제거하고 나머지만 조합
+        if let first = parts.first, first.contains("음식점") {
+            let rest = parts.dropFirst()
+            return rest.isEmpty ? "" : rest.joined(separator: " > ")
+        }
+        // 그 외에는 마지막 세부 카테고리만 노출(원하면 라인 아래를 주석 해제/변경)
+        // return parts.last ?? trimmed
+        return parts.joined(separator: " > ")
+    }
 
     var body: some View {
         ZStack {
@@ -293,7 +311,7 @@ private struct ImageCardView: View {
                         .foregroundColor(.black)
                         .lineLimit(1)
 
-                    Text(category)
+                    Text(displayCategory)
                         .font(.footnote)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
