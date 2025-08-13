@@ -6,24 +6,38 @@
 //
 
 import SwiftUI
+import SafariServices
+
+// 인앱 사파리 래퍼
+private struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let vc = SFSafariViewController(url: url)
+        vc.preferredBarTintColor = nil   // 시스템 기본
+        vc.preferredControlTintColor = nil
+        return vc
+    }
+    func updateUIViewController(_ vc: SFSafariViewController, context: Context) {}
+}
 
 public struct PlaceResultView: View {
     @Environment(\.dismiss) private var dismiss
 
     let placeName: String
     let imageName: String
-    let naverPlaceURL: URL?
-    
+    let kakaoPlaceURL: URL?
+
     @State private var goHome = false
+    @State private var showSafari = false
 
     public init(
         placeName: String = "소노이",
         imageName: String = "yourFoodImage", // 결정된 이미지
-        naverPlaceURL: URL? = URL(string: "https://map.naver.com/")
+        kakaoPlaceURL: URL? = URL(string: "https://map.kakao.com/")
     ) {
         self.placeName = placeName
         self.imageName = imageName
-        self.naverPlaceURL = naverPlaceURL
+        self.kakaoPlaceURL = kakaoPlaceURL
     }
 
     public var body: some View {
@@ -43,8 +57,6 @@ public struct PlaceResultView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 170)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-                
             }
             .clipped()
 
@@ -54,11 +66,13 @@ public struct PlaceResultView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 40)
 
-            // CTA 버튼 (네이버 플레이스)
-            if let url = naverPlaceURL {
-                Link(destination: url) {
+            // CTA 버튼 (카카오맵) - 인앱 열기
+            if let url = kakaoPlaceURL {
+                Button {
+                    showSafari = true
+                } label: {
                     HStack(spacing: 8) {
-                        Text("네이버 플레이스로 보기")
+                        Text("카카오맵에서 보기")
                             .font(.headline.bold())
                         Image(systemName: "arrow.right.circle")
                             .font(.headline)
@@ -70,21 +84,25 @@ public struct PlaceResultView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 6)
                 }
+                .sheet(isPresented: $showSafari) {
+                    SafariView(url: url)
+                        .ignoresSafeArea()
+                }
             } else {
                 Button {} label: {
                     HStack(spacing: 8) {
-                        Text("네이버 플레이스로 보기")
+                        Text("카카오맵에서 보기")
                             .font(.headline.bold())
                         Image(systemName: "arrow.right.circle")
                             .font(.headline)
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 56)
+                    .frame(height: 60)
                     .foregroundColor(.black)
-                    .background(Color.orange)
+                    .background(Color.gray.opacity(0.4))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .shadow(color: .black.opacity(0.12), radius: 8, x: 0, y: 6)
                 }
+                .disabled(true)
             }
 
             Spacer(minLength: 8)
@@ -104,19 +122,17 @@ public struct PlaceResultView: View {
         }
         .padding(20)
         .background(
-            // 배경 톤(시안의 살구색 느낌). 필요 없으면 제거 가능
             Color.orange.opacity(0.12).ignoresSafeArea()
         )
         .navigationBarBackButtonHidden(true)
-        
         .navigationDestination(isPresented: $goHome) {
-                    HomeView()
-                        .navigationBarBackButtonHidden(true)
-                }
+            HomeView()
+                .navigationBarBackButtonHidden(true)
+        }
     }
 }
 
-// 사진 모서리 L자 마크
+// 사진 모서리 L자 마크 (원본 유지)
 private struct CornerMarks: View {
     var color: Color = .white
     var lineWidth: CGFloat = 4
@@ -167,7 +183,7 @@ private struct CornerMarks: View {
                     Spacer()
                     HStack {
                         Spacer()
-                        Rectangle().fill(color).frame(width: w, height: s)
+                        Rectangle().fill(color).frame(width: s, height: w)
                     }
                     HStack {
                         Spacer()
@@ -175,7 +191,7 @@ private struct CornerMarks: View {
                     }
                 }
             }
-            .padding(10) // 사진 가장자리에서 살짝 안쪽으로
+            .padding(10)
         }
     }
 }
@@ -183,10 +199,9 @@ private struct CornerMarks: View {
 #Preview {
     NavigationStack {
         PlaceResultView(
-            placeName: "소노이",
+            placeName: "소노이에",
             imageName: "yourFoodImage",
-            naverPlaceURL: URL(string: "https://map.naver.com/")
+            kakaoPlaceURL: URL(string: "https://map.kakao.com/")
         )
     }
 }
-
