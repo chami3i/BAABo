@@ -126,7 +126,7 @@ struct PlaceView: View {
                     // 결과 보기
                     Button(action : { moveToPlaceResultView = true }) {
                         Text(timerActive ? "\(timeString(from: remainingTime)) 후 결과 보기" : "결과 보기")
-                            .font(.title).bold()
+                            .font(.title2).bold()
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
