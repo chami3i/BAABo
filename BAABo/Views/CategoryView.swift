@@ -55,7 +55,7 @@ struct CategoryView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                VStack {
+                VStack (alignment: .center){
                     // MARK: 상단바
                     HStack {
                         Text("카테고리 선택")     // 페이지 이름
@@ -79,7 +79,7 @@ struct CategoryView: View {
                             .foregroundColor(timerEnded ? Color("4_silverColor") : Color(.accent))
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 10)
+                    .padding(.bottom, 7)
                     
                     // 카테고리 선택 가이드
                     HStack {
@@ -157,7 +157,7 @@ struct CategoryView: View {
                         }
                     }
                     
-                    .padding(.bottom, 80)
+                    .padding(.bottom, 50)
                     
                     // MARK: 결과 보기 버튼
                     Button(action:{
@@ -166,16 +166,17 @@ struct CategoryView: View {
                         HStack {
                             if isSubmitting { ProgressView().tint(.black) }
                             Text(timerEnded ? "결과 보기" : String(format: "00:%02d 후 결과 보기", timeRemaining))
-                                .font(.title)
+                            //  .font(.system(size: 30, weight: .bold))
+                                .font(.title2)
                                 .bold()
                             Image(systemName: "arrow.right.circle")
                                 .resizable()
                                 .scaledToFit()
                                 .bold()
-                                .frame(width:30, height:30)
+                                .frame(width:25, height:25)
                         }
                         .foregroundColor(.black)
-                        .frame(width: 337, height: 101)
+                        .frame(width: 337, height: 90)
                         .background(timerEnded ? Color(.accent) : Color("1_grayColor"))
                         .cornerRadius(20)
                         
