@@ -320,7 +320,7 @@ private struct ImageCardView: View {
                 }
 
                 // 하단: 영업 상태 + 시간
-                Text("\(status) \(hours)")
+                Text("\(status) · \(hours)")
                     .font(.footnote)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
