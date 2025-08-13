@@ -38,12 +38,21 @@ struct MapView: View {
                         // 중심 좌표가 바뀔 때마다 공유 상태에 반영
                         .onChange(of: viewModel.region.center) { _, newCenter in
                             search.center = newCenter
+                            adjustSpan()
                         }
                         .onAppear {
                             viewModel.requestLocationAccess()
                             // 초기 진입 시 현재 지도 중심/반경을 공유 상태에 세팅
+                            viewModel.radiusInMeters = 1500
                             search.center = viewModel.region.center
                             search.radius = Int(viewModel.radiusInMeters)
+                            
+                            // Adjust region span to fit radius with padding
+                            adjustSpan()
+                        }
+                        .onChange(of: viewModel.radiusInMeters) { _, newValue in
+                            let _ = newValue // keep parameter used
+                            adjustSpan()
                         }
 
                     
@@ -125,11 +134,11 @@ struct MapView: View {
                     VStack(spacing: 10) {
                         HStack {
                             Text("0m")
-                            Slider(value: $viewModel.radiusInMeters, in: 0...1000, step: 50)
+                            Slider(value: $viewModel.radiusInMeters, in: 0...3000, step: 50)
                                 .onChange(of: viewModel.radiusInMeters) { _, newValue in
                                     search.radius = Int(newValue)
                                 }
-                            Text("1km")
+                            Text("3km")
                         }
                         
                         Button("확정") {
@@ -198,6 +207,17 @@ struct MapView: View {
         let earthCircumference = 40_075_000.0
         let metersPerDegree = earthCircumference * cos(centerLat) / 360
         return (span * metersPerDegree) / screenWidth
+    }
+    
+    private func adjustSpan() {
+        let earthCircumference = 40_075_000.0
+        let centerLat = viewModel.region.center.latitude * .pi / 180
+        let metersPerDegreeLon = earthCircumference * cos(centerLat) / 360
+        let paddingFactor = 1.15 // tighter view
+        let zoomTightness = 0.85 // additional zoom-in (smaller => more zoom)
+        let diameterMeters = viewModel.radiusInMeters * 2 * paddingFactor
+        let deltaDeg = (diameterMeters / metersPerDegreeLon) * zoomTightness
+        viewModel.region.span = MKCoordinateSpan(latitudeDelta: deltaDeg, longitudeDelta: deltaDeg)
     }
 }
 
