@@ -74,7 +74,7 @@ struct PlaceView: View {
                     }
                     .padding(.horizontal)
 
-                    Text("방문해보고싶은 가게를 pick! 해 보세요.\n(최대 3개 선택 가능)")
+                    Text("방문해 보고 싶은 가게를 pick♡! 해 보세요.\n(최대 3개 선택 가능)")
                         .font(.subheadline)
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity, alignment: .leading)
