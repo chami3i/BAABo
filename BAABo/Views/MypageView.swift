@@ -18,6 +18,11 @@ struct MypageView: View {
     @State private var showFood: Bool = true
     @State private var foodToAvoid: String = ""
     
+    @State private var isLoading = false
+    @State private var isSaving = false
+    @State private var saveMessage: String? = nil
+    @State private var currentUserId: String? = nil
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
@@ -67,39 +72,125 @@ struct MypageView: View {
                 }
                 .padding(.top, 4)
                 
+<<<<<<< HEAD
                 // 저장 버튼: draft → saved 반영 (이후에도 값 유지됨)
                 Button {
                     savedName = name
                     savedShowFood = showFood
                     savedFoodToAvoid = foodToAvoid
                     print("저장됨: \(savedName), \(savedShowFood ? savedFoodToAvoid : "사용안함")")
+=======
+                // 전역(users/{uid}) 저장
+                Button {
+                    saveProfile()
+>>>>>>> main
                 } label: {
-                    Text("저장")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .foregroundStyle(.black)
-                        .background(Color.orange)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .shadow(radius: 3, y: 1)
+                    HStack(spacing: 8) {
+                        if isSaving { ProgressView().tint(.black) }
+                        Text(isSaving ? "저장 중..." : "저장")
+                    }
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .foregroundStyle(.black)
+                    .background(Color.orange)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .shadow(radius: 3, y: 1)
                 }
+<<<<<<< HEAD
+=======
+                .disabled(isSaving)
+>>>>>>> main
                 .padding(.top, 6)
+                
+                if let msg = saveMessage {
+                    Text(msg)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .padding(.top, 6)
+                }
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 24)
         }
+        .overlay {
+            if isLoading {
+                ZStack {
+                    Color.black.opacity(0.1).ignoresSafeArea()
+                    ProgressView("불러오는 중...")
+                        .padding(16)
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+            }
+        }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.white.ignoresSafeArea())
+<<<<<<< HEAD
         // 3) 화면 열릴 때 저장된 값으로 draft 동기화
         .onAppear {
             name = savedName
             showFood = savedShowFood
             foodToAvoid = savedFoodToAvoid
+=======
+        .onAppear {
+            loadProfile()   // 진입 시 전역 프로필 로드
+>>>>>>> main
         }
     }
     
     private func label(_ text: String) -> some View {
         Text(text).font(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    // 전역 프로필 저장
+    private func saveProfile() {
+        guard let uid = currentUserId else { return }
+        isSaving = true
+        saveMessage = nil
+        
+        // 입력값 정리
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nickname = trimmedName.isEmpty ? "게스트" : trimmedName
+        let food = showFood ? foodToAvoid.trimmingCharacters(in: .whitespacesAndNewlines) : "없음"
+        
+        let profile = UserProfile(userId: uid, nickname: nickname, foodToAvoid: food)
+        UserService.saveUserProfile(profile) { ok in
+            DispatchQueue.main.async {
+                self.isSaving = false
+                self.saveMessage = ok ? "저장 완료!" : "저장 실패. 네트워크를 확인해주세요."
+            }
+        }
+    }
+    
+    // 전역 프로필 로드
+    private func loadProfile() {
+        isLoading = true
+        AuthService.getCurrentUserId { uid in
+            self.currentUserId = uid
+            guard let uid = uid else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.saveMessage = "로그인이 필요합니다."
+                }
+                return
+            }
+            UserService.fetchUserProfile(userId: uid) { profile in
+                DispatchQueue.main.async {
+                    if let p = profile {
+                        self.name = p.nickname
+                        self.foodToAvoid = p.foodToAvoid
+                        self.showFood = (p.foodToAvoid != "없음")
+                    } else {
+                        // 최초 진입 기본값
+                        self.name = "게스트"
+                        self.foodToAvoid = "없음"
+                        self.showFood = false
+                    }
+                    self.isLoading = false
+                }
+            }
+        }
     }
 }
 

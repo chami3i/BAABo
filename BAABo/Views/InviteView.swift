@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import FirebaseFirestore
 
 // MARK: - 모델 정의
 struct Friend: Identifiable, Hashable {
     let id = UUID()
+    let userId: String
     var name: String
     var foodToAvoid: String
     var showFood: Bool = true
@@ -21,11 +23,12 @@ let memojiImages = ["memoji1", "memoji2", "memoji3", "memoji4", "memoji5", "memo
 
 // MARK: - InviteView (메인 화면)
 struct InviteView: View {
+    @EnvironmentObject var router: Router
     @Environment(\.dismiss) var dismiss
     
+    let roomCode: String
     let location: String
     
-    @State private var roomCode: String? = nil
     @State private var urlCopied = false
     
     @State private var invitedFriends: [Friend] = []
@@ -37,11 +40,16 @@ struct InviteView: View {
     
     @State private var isNavigatingToCategory = false
     
+    // Firestore 리스너 해제를 위해 보관
+    @State private var participantListener: ListenerRegistration?
+    //location 등 변경 실시간 감지
+    @State private var roomListener: ListenerRegistration?
+    
     // 초대 URL
     var inviteURL: String {
-        guard let code = roomCode else { return "방 생성 중..." }
-        return "https://BAABo.com/join/\(code)"
+        return "baabo://join/\(roomCode)"
     }
+    
     
     var body: some View {
         NavigationStack {
@@ -54,7 +62,7 @@ struct InviteView: View {
                     HStack(spacing: 5) {
                         Image(systemName: "location.fill")
                             .foregroundColor(.black)
-                        Text("\(location)에서 식당 찾는중")
+                        Text("\(location)에서 식당 찾는 중")
                             .font(.title3)
                             .fontWeight(.semibold)
                     }
@@ -63,14 +71,16 @@ struct InviteView: View {
                     .padding(.top, 5)
                     
                     // 링크 표시
-                    HStack {
+                    HStack(alignment: .center, spacing: 8) {
                         Image(systemName: "link")
+                            .frame(height: 24)
                         
                         Text(inviteURL)
                             .font(.subheadline)
                             .foregroundColor(.gray)
                             .lineLimit(1)
                             .truncationMode(.tail)
+                            .frame(height: 24)
                             .onTapGesture {
                                 guard roomCode != nil else { return }
                                 UIPasteboard.general.string = inviteURL
@@ -86,6 +96,7 @@ struct InviteView: View {
                             Text("복사됨!")
                                 .font(.caption)
                                 .foregroundColor(.green)
+                                .frame(height: 24)
                                 .transition(.opacity)
                         }
                         
@@ -98,28 +109,23 @@ struct InviteView: View {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.title2)
                                 .foregroundColor(.orange)
+                                .frame(height: 24)
                         }
                     }
+                    .frame(height: 40)
                     .padding(.horizontal, 24)
                     .padding(.top, -10)
                     
                     // 미모지
-                    HStack(spacing: -10) {
-                        Image("memoji1")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 120, height: 120)
-                            .clipShape(Circle())
-                            .shadow(radius: 5)
-                            .offset(x: -1, y: 15)
-                        
-                        Image("memoji2")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 140, height: 140)
-                            .clipShape(Circle())
-                            .shadow(radius: 5)
-                    }
+                    AvatarStack(friends: invitedFriends)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(
+                            LinearGradient(colors: [Color.white.opacity(0.0), Color.white.opacity(0.15)],
+                                           startPoint: .top, endPoint: .bottom)
+                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        )
+                    
                     
                     // 카드 영역
                     ZStack(alignment: .top) {
@@ -175,66 +181,89 @@ struct InviteView: View {
                         .ignoresSafeArea(edges: .bottom)
                         
                         // 떠나자 버튼 + NavigationLink
-                        HStack {
-                            Spacer()
-                            
-                            NavigationLink(destination: CategoryView(), isActive: $isNavigatingToCategory) {
-                                EmptyView()
-                            }
-                            .hidden()
-                            
-                            Button(action: {
-                                isNavigatingToCategory = true
-                            }) {
-                                HStack {
-                                    Text("떠나자")
-                                    Image(systemName: "arrow.right.circle")
+                        if router.isHost {
+                            HStack {
+                                Spacer()
+                                
+                                NavigationLink(destination: CategoryView(), isActive: $isNavigatingToCategory) {
+                                    EmptyView()
                                 }
-                                .font(.headline)
-                                .foregroundColor(.black)
-                                .padding()
-                                .frame(width: 160)
-                                .background(Color.orange)
-                                .cornerRadius(12)
-                                .shadow(radius: 3)
+                                .hidden()
+                                
+                                Button(action: {
+                                    isNavigatingToCategory = true
+                                }) {
+                                    HStack {
+                                        Text("떠나자")
+                                        Image(systemName: "arrow.right.circle")
+                                    }
+                                    .font(.headline)
+                                    .foregroundColor(.black)
+                                    .padding()
+                                    .frame(width: 160)
+                                    .background(Color.orange)
+                                    .cornerRadius(12)
+                                    .shadow(radius: 3)
+                                }
+                                
+                                Spacer()
                             }
-                            
-                            Spacer()
+                            .offset(y: -30)
                         }
-                        .offset(y: -30)
                     }
                     .padding(.top, 50)
                 }
             }
             .onAppear {
-                // 방 코드 없으면 생성 요청
-                if roomCode == nil {
-                    RoomService.createRoom { id in
-                        DispatchQueue.main.async {
-                            if let id = id {
-                                roomCode = id
-                            } else {
-                                print("방 생성 실패")
-                            }
-                        }
+                // 방 상태 동기화
+                router.currentRoomId = roomCode
+                router.selectedLocation = location
+                
+                // UID 확보 후 역할에 따라 참가 처리
+                AuthService.getCurrentUserId { uid in
+                    guard let uid = uid else { return }
+                    RoomService.joinRoomWithRole(roomId: roomCode,
+                                                 userId: uid,
+                                                 isHost: router.isHost) { ok in
+                        print(ok ? "참가 처리 완료 (isHost=\(router.isHost))" : "참가 처리 실패")
                     }
                 }
                 
-                //
-                timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
-                    if invitedFriends.count < 6 {
-                        withAnimation {
-                            let randomFood = foodList.randomElement() ?? "없음"
-                            let randomImage = memojiImages.randomElement() ?? "memoji1"
-                            let newFriend = Friend(name: "바보 \(friendCount)", foodToAvoid: randomFood, imageName: randomImage)
-                            invitedFriends.append(newFriend)
-                            friendCount += 1
-                        }
-                    } else {
-                        timer?.invalidate()
-                        timer = nil
+                // 참가자 서브컬렉션 실시간 반영
+                participantListener = RoomService.listenParticipants(roomId: roomCode) { friends in
+                    DispatchQueue.main.async {
+                        self.invitedFriends = friends
                     }
                 }
+                
+                // location 등 변경 실시간 감지
+                roomListener = RoomService.listenRoom(roomId: roomCode) { loc in
+                    if let loc, !loc.isEmpty {
+                        router.selectedLocation = loc
+                    }
+                }
+                
+                //                timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+                //                    if invitedFriends.count < 6 {
+                //                        withAnimation {
+                //                            let randomFood = foodList.randomElement() ?? "없음"
+                //                            let randomImage = memojiImages.randomElement() ?? "memoji1"
+                //                            let newFriend = Friend(name: "바보 \(friendCount)", foodToAvoid: randomFood, imageName: randomImage)
+                //                            invitedFriends.append(newFriend)
+                //                            friendCount += 1
+                //                        }
+                //                    } else {
+                //                        timer?.invalidate()
+                //                        timer = nil
+                //                    }
+                //                }
+            }
+            .onDisappear {
+                // 리스너 해제 (메모리/요금 절약)
+                participantListener?.remove()
+                participantListener = nil
+                roomListener?.remove()
+                roomListener = nil
             }
             .sheet(isPresented: $isPopupPresented) {
                 if let index = selectedFriendIndex {

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CategoryResultView: View {
+    @EnvironmentObject var search: SearchContext
     @State private var moveToPlaceView = false
     let selectedCategory = "아시안" // TODO: 나중에 동적으로 바꾸기
     
@@ -31,6 +32,7 @@ struct CategoryResultView: View {
                
                 // 식당 보러 가기 버튼
                 Button(action:{
+                    search.category = selectedCategory
                     moveToPlaceView = true
                 }) {
                     HStack {
@@ -54,7 +56,7 @@ struct CategoryResultView: View {
             }
             .navigationBarBackButtonHidden(true)
             .navigationDestination(isPresented: $moveToPlaceView) {
-                PlaceView(category: selectedCategory)
+                PlaceView()
             }
         }
     }
@@ -62,4 +64,5 @@ struct CategoryResultView: View {
 
 #Preview {
     CategoryResultView()
-} 
+        .environmentObject(SearchContext())
+}

@@ -6,32 +6,24 @@
 //
 
 import Foundation
+import SwiftUI
 
-class Router: ObservableObject {
-    @Published var isHost: Bool = false
-    @Published var navigateToMapView: Bool = false
-    @Published var navigateToInviteView: Bool = false
-    
-    @Published var selectedLocation: String = ""
+final class Router: ObservableObject {
     @Published var currentRoomId: String? = nil
+    @Published var isHost: Bool = true
+    @Published var selectedLocation: String = ""
     
-//    @Published var isShowingInviteView = false
-//    @Published var currentRoomId: String? = nil
-//    @Published var isHost: Bool = false
-//    
-//    // 초대자가 직접 InviteView로 들어왔는지 여부
-//    @Published var isInviteDirectAccess = false
-//
-//    func navigateToInviteView(roomId: String, directAccess: Bool = false) {
-//        currentRoomId = roomId
-//        isShowingInviteView = true
-//        isInviteDirectAccess = directAccess
-//    }
-//    
-//    func dismissInviteView() {
-//        isShowingInviteView = false
-//        currentRoomId = nil
-//        isInviteDirectAccess = false
-//    }
+    // 화면 이동 상태들
+    @Published var navigateToInviteView: Bool = false
+    @Published var navigateToMapView: Bool = false
+    
+    func resetRoom() {
+        currentRoomId = nil
+        isHost = true
+        selectedLocation = ""
+        navigateToInviteView = false
+        navigateToMapView = false
+    }
 }
+
 

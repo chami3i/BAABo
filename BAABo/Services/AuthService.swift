@@ -22,4 +22,26 @@ enum AuthService {
             }
         }
     }
+    
+    // 현재 로그인된 유저 ID 반환 (비동기 아님, nil 가능)
+    static func getCurrentUserId() -> String? {
+        return Auth.auth().currentUser?.uid
+    }
+    
+    // 유저 ID를 비동기로 안전하게 얻고 싶을 때 (예: 익명 로그인이 끝난 후 호출)
+    static func getCurrentUserId(completion: @escaping (String?) -> Void) {
+        if let uid = Auth.auth().currentUser?.uid {
+            completion(uid)
+        } else {
+            // 아직 로그인 안됐으면 익명 로그인 시도 후 uid 전달
+            Auth.auth().signInAnonymously { result, error in
+                if let user = result?.user {
+                    completion(user.uid)
+                } else {
+                    completion(nil)
+                }
+            }
+        }
+    }
 }
+
