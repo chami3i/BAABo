@@ -307,8 +307,19 @@ struct CategoryView: View {
                     CategoryVoteService.aggregateAndSaveResult(roomId: roomId) { winner, scores in
                         self.isSubmitting = false
                         self.scoreBoard = scores
-                        self.winnerCategoryName = winner ?? "기권 다수"
-                        self.winnerImageName = imageName(for: self.winnerCategoryName)
+                        
+                        // 모든 인원이 기권(집계 winner가 없음)이라면 카테고리에서 랜덤 선택
+                        let resolvedWinner: String = {
+                            if let w = winner, !w.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                return w
+                            } else {
+                                let fallback = sampleCategories.randomElement()?.name ?? "아시안"
+                                return fallback
+                            }
+                        }()
+                        
+                        self.winnerCategoryName = resolvedWinner
+                        self.winnerImageName = imageName(for: resolvedWinner)
                         self.showResultPopup = true
                     }
                 }
