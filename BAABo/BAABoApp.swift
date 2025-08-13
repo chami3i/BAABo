@@ -33,17 +33,14 @@ struct BAABoApp: App {
                         
                         router.isHost = false
                         router.currentRoomId = roomId
-                        
                         // Firestore에서 해당 방의 location 읽음
                         router.navigateToInviteView = false  // 네비게이션 보류
+                        
                         RoomService.fetchRoomLocation(roomId: roomId) { loc in
                             DispatchQueue.main.async {
                                 // 값이 비어있으면 기본 문구, 있으면 방장 값으로 반영
-                                if let loc, !loc.isEmpty {
-                                    router.selectedLocation = loc
-                                } else {
-                                    router.selectedLocation = "현재 위치에서 찾는 중"
-                                }
+                                router.selectedLocation = (loc?.isEmpty == false) ? (loc ?? "") : "현재 위치에서 찾는 중"
+                                
                                 // location 세팅이 끝난 후에 InviteView로 이동
                                 router.navigateToInviteView = true
                             }

@@ -123,9 +123,9 @@ struct InviteView: View {
                         .background(
                             LinearGradient(colors: [Color.white.opacity(0.0), Color.white.opacity(0.15)],
                                            startPoint: .top, endPoint: .bottom)
-                                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         )
-
+                    
                     
                     // 카드 영역
                     ZStack(alignment: .top) {
@@ -181,33 +181,35 @@ struct InviteView: View {
                         .ignoresSafeArea(edges: .bottom)
                         
                         // 떠나자 버튼 + NavigationLink
-                        HStack {
-                            Spacer()
-                            
-                            NavigationLink(destination: CategoryView(), isActive: $isNavigatingToCategory) {
-                                EmptyView()
-                            }
-                            .hidden()
-                            
-                            Button(action: {
-                                isNavigatingToCategory = true
-                            }) {
-                                HStack {
-                                    Text("떠나자")
-                                    Image(systemName: "arrow.right.circle")
+                        if router.isHost {
+                            HStack {
+                                Spacer()
+                                
+                                NavigationLink(destination: CategoryView(), isActive: $isNavigatingToCategory) {
+                                    EmptyView()
                                 }
-                                .font(.headline)
-                                .foregroundColor(.black)
-                                .padding()
-                                .frame(width: 160)
-                                .background(Color.orange)
-                                .cornerRadius(12)
-                                .shadow(radius: 3)
+                                .hidden()
+                                
+                                Button(action: {
+                                    isNavigatingToCategory = true
+                                }) {
+                                    HStack {
+                                        Text("떠나자")
+                                        Image(systemName: "arrow.right.circle")
+                                    }
+                                    .font(.headline)
+                                    .foregroundColor(.black)
+                                    .padding()
+                                    .frame(width: 160)
+                                    .background(Color.orange)
+                                    .cornerRadius(12)
+                                    .shadow(radius: 3)
+                                }
+                                
+                                Spacer()
                             }
-                            
-                            Spacer()
+                            .offset(y: -30)
                         }
-                        .offset(y: -30)
                     }
                     .padding(.top, 50)
                 }
