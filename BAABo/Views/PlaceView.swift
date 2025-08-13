@@ -387,3 +387,4 @@ final class KakaoPlaceService {
     return PlaceView()
         .environmentObject(sc)
 }
+
