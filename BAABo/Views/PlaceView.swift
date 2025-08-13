@@ -29,7 +29,7 @@ struct PlaceView: View {
     @EnvironmentObject var search: SearchContext
 
     // 타이머
-    @State private var remainingTime: Int = 120
+    @State private var remainingTime: Int = 10
     @State private var timerActive: Bool = true
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -140,7 +140,16 @@ struct PlaceView: View {
             }
             .navigationBarBackButtonHidden(true)
             .navigationDestination(isPresented: $moveToPlaceResultView) {
-                PlaceResultView()
+                // 하트로 선택된 카드들만 후보로 전달 (없으면 전체 카드 중 3개 랜덤)
+                let selected = cards.filter { selectedPlaceIDs.contains($0.id) }
+                let fallback = Array(cards.shuffled().prefix(3))
+                let picks = selected.isEmpty ? fallback : selected
+                let candidates = picks.map { c in
+                    PlaceResultView.Candidate(id: c.id,
+                                              title: c.title,
+                                              kakaoURL: c.link)
+                }
+                PlaceResultView(candidates: candidates)
             }
         }
         // 타이머
