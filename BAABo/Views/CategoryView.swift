@@ -66,7 +66,7 @@ struct CategoryView: View {
                         Spacer()
                         ZStack {    // 타이머
                             Circle()
-                                .fill(timerEnded ? Color("4_silverColor") : Color(.accent))  // 타이머 활성화 여부에 따라 버튼 색 변경
+                                .fill(timerEnded ? Color("4_silverColor") : Color(.orange))  // 타이머 활성화 여부에 따라 버튼 색 변경
                                 .frame(width:35, height:35)
                             Image(systemName: "timer")
                                 .resizable()
@@ -76,7 +76,7 @@ struct CategoryView: View {
                         }
                         Text(String(format:"00:%02d", timeRemaining))   // 남은 시간
                             .font(.system(size: 27, weight: .semibold))
-                            .foregroundColor(timerEnded ? Color("4_silverColor") : Color(.accent))
+                            .foregroundColor(timerEnded ? Color("4_silverColor") : Color(.orange))
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 7)
@@ -92,7 +92,7 @@ struct CategoryView: View {
                         Spacer()
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 20)   // 상단바와 선택버튼 사이 간격 조정
+                    .padding(.bottom, 40)   // 상단바와 선택버튼 사이 간격 조정
                     
                     // MARK: 카테고리 선택 버튼 (정렬)
                     LazyVGrid(columns: columns, spacing:17) {
@@ -177,7 +177,7 @@ struct CategoryView: View {
                         }
                         .foregroundColor(.black)
                         .frame(width: 337, height: 90)
-                        .background(timerEnded ? Color(.accent) : Color("1_grayColor"))
+                        .background(timerEnded ? Color(.orange) : Color("1_grayColor"))
                         .cornerRadius(20)
                         
                     }
