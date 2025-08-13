@@ -36,11 +36,17 @@ struct PlaceResultContainerView: View {
     var body: some View {
         Group {
             if let one = vm.items.first {
-                PlaceResultView(
-                    placeName: one.name,
-                    imageName: one.imageName ?? fallbackImageName,
-                    kakaoPlaceURL: one.placeURL
-                )
+                // vm.items에서 최대 3개 후보를 구성 (무작위)
+                let picks = Array(vm.items.shuffled().prefix(3))
+                let candidates = picks.map { item in
+                    let idSource = item.placeURL?.absoluteString ?? item.name
+                    return PlaceResultView.Candidate(
+                        id: idSource,
+                        title: item.name,
+                        kakaoURL: item.placeURL
+                    )
+                }
+                PlaceResultView(candidates: candidates)
             } else if vm.isLoading {
                 ProgressView("주변 가게 찾는 중…")
                     .padding()
