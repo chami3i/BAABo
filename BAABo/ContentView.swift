@@ -69,4 +69,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(SearchContext())
+        .environmentObject(Router())
 }
