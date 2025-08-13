@@ -351,6 +351,12 @@ final class KakaoPlaceService {
 }
 
 #Preview {
-    PlaceView()
-        .environmentObject(SearchContext())
+    // 프리뷰 전용 임시 위치/반경 주입
+    let sc = SearchContext()
+    sc.center = CLLocationCoordinate2D(latitude: 37.561, longitude: 126.946)
+    sc.radius = 800 // 0.8km
+    sc.category = "" // 전체 맛집
+    
+    return PlaceView()
+        .environmentObject(sc)
 }
