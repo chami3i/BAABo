@@ -212,6 +212,9 @@ struct InviteView: View {
                         }
                     }
                     .padding(.top, 50)
+                    .navigationDestination(isPresented: $isNavigatingToCategory)  {
+                        CategoryView()
+                    }
                 }
             }
             .onAppear {
@@ -377,6 +380,6 @@ extension View {
 
 // MARK: - 프리뷰
 #Preview {
-    // InviteView()
+//    InviteView()
 }
 
