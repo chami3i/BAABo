@@ -71,6 +71,12 @@ struct PlaceView: View {
                     }
                     .padding(.horizontal)
 
+                    Text("방문해보고싶은 가게를 pick! 해 보세요.\n(최대 3개 선택 가능)")
+                        .font(.subheadline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+
                     // 리스트
                     VStack(alignment: .leading, spacing: 20) {
                         if isLoading {
@@ -229,7 +235,7 @@ private struct SafariView: UIViewControllerRepresentable, Identifiable {
     func updateUIViewController(_ vc: SFSafariViewController, context: Context) {}
 }
 
-// 카드 뷰 (투표 버튼 분리)
+// 이미지 카드 뷰
 private struct ImageCardView: View {
     var imageName: String
     var title: String
@@ -243,22 +249,25 @@ private struct ImageCardView: View {
     @State private var isFavorite = false
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            Image(imageName)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 370, height: 200)
-                .clipped()
-                .cornerRadius(20)
+        ZStack {
+            // 배경 프레임: 연회색 + 라운드 + 얇은 외곽선 + 살짝 그림자
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.gray.opacity(0.15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 3)
 
-            VStack {
-                HStack {
-                    Text("⭐️ \(rating)")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                        .padding(6)
+            VStack(alignment: .leading, spacing: 8) {
+                // 상단: 평점 배지 + 우상단 하트 버튼(주황 원형)
+                HStack(spacing: 8) {
+                    Text("★ \(rating)")
+                        .font(.caption).bold()
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .foregroundColor(.orange)
                         .background(Color.white)
-                        .cornerRadius(20)
+                        .clipShape(Capsule())
 
                     Spacer()
 
@@ -267,45 +276,63 @@ private struct ImageCardView: View {
                         onVote()
                     } label: {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
-                            .foregroundColor(isFavorite ? .orange : .white)
-                            .padding(6)
-                            .background(Color.white.opacity(0.5))
-                            .clipShape(Circle())
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(isFavorite ? .orange : .secondary)
+                            .frame(width: 32, height: 32)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .disabled(!isEnabled)
+                    .opacity(isEnabled ? 1 : 0.4)
                 }
-                .padding([.horizontal, .top], 10)
 
-                Spacer()
+                // 가운데: 가게 이름(볼드) + 카테고리(작게, 회색)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(title)
+                        .font(.title3).bold()
+                        .foregroundColor(.black)
+                        .lineLimit(1)
 
-                HStack {
-                    VStack(alignment: .leading) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(title).font(.title).bold().foregroundColor(.black)
-                            Text(category).font(.footnote).foregroundColor(.black)
-                            Spacer()
-                        }
-                        HStack {
-                            Text(status).font(.callout).foregroundColor(.black)
-                            Text(hours).font(.callout).foregroundColor(.black)
-                            Spacer()
-                        }
-                    }
+                    Text(category)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+
                     Spacer()
                 }
-                .padding(10)
-                .background(Color.white.opacity(0.5))
-                .cornerRadius(10)
-                .frame(maxWidth: .infinity, minHeight: 60)
-                .padding([.horizontal, .bottom], 10)
-            }
 
+                // 하단: 영업 상태 + 시간
+                Text("\(status) \(hours)")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+            .padding(.vertical, 18)
+            .padding(.horizontal, 18)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            ZStack {
+                Circle().fill(Color.white)
+                Circle().stroke(Color.black.opacity(0.12), lineWidth: 1)
+                Image(systemName: "arrow.right")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundColor(.black)
+            }
+            .frame(width: 34, height: 34)
+            .padding(.trailing, 14)
+            .padding(.bottom, 10)
+        }
+        // 선택 마감 오버레이
+        .overlay {
             if !isEnabled {
-                ZStack {
-                    Rectangle().fill(Color.gray.opacity(0.8)).cornerRadius(20)
-                    Text("선택 마감").font(.title).foregroundColor(.white)
-                }
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color.black.opacity(0.45))
+                Text("선택 마감")
+                    .font(.headline).bold()
+                    .foregroundColor(.white)
             }
         }
+        .frame(maxWidth: .infinity, minHeight: 120)
     }
 }
 
