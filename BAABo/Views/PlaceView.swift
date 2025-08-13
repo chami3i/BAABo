@@ -43,6 +43,9 @@ struct PlaceView: View {
 
     // 네비게이션
     @State private var moveToPlaceResultView: Bool = false
+    
+    // 하트 선택 개수
+    @State private var selectedPlaceIDs: Set<String> = []
 
     var body: some View {
         NavigationStack {
@@ -96,16 +99,23 @@ struct PlaceView: View {
                                     safariURL = card.link
                                 } label: {
                                     ImageCardView(
-                                        imageName: "placeholder-restaurant",
                                         title: card.title,
                                         category: card.categoryName,
                                         status: card.statusText,
                                         hours: card.hoursText,
                                         rating: card.rating,
                                         isEnabled: timerActive,
+                                        isSelected: selectedPlaceIDs.contains(card.id),
+                                        selectedCount: selectedPlaceIDs.count,
                                         onVote: {
-                                            // TODO: 서버 투표 API 연결
-                                            // 예: VoteService.vote(placeId: card.id)
+                                            if selectedPlaceIDs.contains(card.id) {
+                                                selectedPlaceIDs.remove(card.id)
+                                            } else if selectedPlaceIDs.count < 3 {
+                                                selectedPlaceIDs.insert(card.id)
+                                            } else {
+                                                // do nothing when already at limit
+                                            }
+                                            // TODO: 서버 투표 API 연결 (선택/해제에 맞춰 갱신)
                                         }
                                     )
                                 }
@@ -237,16 +247,15 @@ private struct SafariView: UIViewControllerRepresentable, Identifiable {
 
 // 이미지 카드 뷰
 private struct ImageCardView: View {
-    var imageName: String
     var title: String
     var category: String
     var status: String
     var hours: String
     var rating: String
     var isEnabled: Bool
+    var isSelected: Bool
+    var selectedCount: Int
     var onVote: () -> Void
-
-    @State private var isFavorite = false
     
     private var displayCategory: String {
         let trimmed = category.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -290,18 +299,17 @@ private struct ImageCardView: View {
                     Spacer()
 
                     Button {
-                        isFavorite.toggle()
                         onVote()
                     } label: {
-                        Image(systemName: isFavorite ? "heart.fill" : "heart")
+                        Image(systemName: isSelected ? "heart.fill" : "heart")
                             .font(.title3.weight(.semibold))
-                            .foregroundColor(isFavorite ? .orange : .secondary)
+                            .foregroundColor(isSelected ? .orange : .secondary)
                             .frame(width: 32, height: 32)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .disabled(!isEnabled)
-                    .opacity(isEnabled ? 1 : 0.4)
+                    .disabled(!isEnabled || (!isSelected && selectedCount >= 3))
+                    .opacity((isEnabled && (isSelected || selectedCount < 3)) ? 1 : 0.4)
                 }
 
                 // 가운데: 가게 이름(볼드) + 카테고리(작게, 회색)
@@ -320,7 +328,7 @@ private struct ImageCardView: View {
                 }
 
                 // 하단: 영업 상태 + 시간
-                Text("\(status) \(hours)")
+                Text("\(status) · \(hours)")
                     .font(.footnote)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
