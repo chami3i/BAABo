@@ -23,6 +23,11 @@ struct MypageView: View {
     @State private var saveMessage: String? = nil
     @State private var currentUserId: String? = nil
     
+    @State private var isLoading = false
+    @State private var isSaving = false
+    @State private var saveMessage: String? = nil
+    @State private var currentUserId: String? = nil
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
