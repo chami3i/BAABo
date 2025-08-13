@@ -14,10 +14,6 @@ extension URL: @retroactive Identifiable {
     public var id: String { absoluteString }
 }
 
-#if DEBUG
-private let PREVIEW_FALLBACK = CLLocationCoordinate2D(latitude: 37.561, longitude: 126.946)
-#endif
-
 // 화면에 뿌릴 카드 모델(랜덤 속성 포함)
 private struct PlaceCard: Identifiable {
     let id: String
@@ -74,6 +70,12 @@ struct PlaceView: View {
                         .foregroundColor(timerActive ? .orange : .gray)
                     }
                     .padding(.horizontal)
+
+                    Text("방문해보고싶은 가게를 pick! 해 보세요.\n(최대 3개 선택 가능)")
+                        .font(.subheadline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
 
                     // 리스트
                     VStack(alignment: .leading, spacing: 20) {
@@ -148,18 +150,15 @@ struct PlaceView: View {
     }
 
     private func runSearch() {
-        // 좌표는 MapView에서 설정한 값만 사용(프리뷰만 폴백 허용)
-        #if DEBUG
-        let coord = search.center ?? PREVIEW_FALLBACK
-        #else
+        // 좌표는 MapView에서 설정한 값만 사용
         guard let coord = search.center else {
             self.loadError = "검색 위치가 설정되지 않았어요. 지도에서 위치를 먼저 선택해 주세요."
-            self.cards = []; self.isLoading = false
+            self.cards = []
+            self.isLoading = false
             return
         }
-        #endif
 
-        let radius = min(max(search.radius, 1), 20000)
+        let radius = min(max(search.radius, 10), 20000)
         let query = search.category.isEmpty ? "맛집" : search.category
 
         isLoading = true
@@ -173,13 +172,24 @@ struct PlaceView: View {
                 // 무작위 섞고 상위 6개 + 랜덤 속성 부여
                 let randomized = Array(places.shuffled().prefix(6))
                 let mapped = randomized.map { p in
-                    PlaceCard(
+                    let distMeters: String? = p.distance
+                    let distanceText: String = {
+                        if let d = distMeters, let m = Int(d) {
+                            return "\(m)m"
+                        }
+                        return ""
+                    }()
+                    let hours: String = {
+                        let rand = Self.randomHoursText()
+                        return distanceText.isEmpty ? rand : "\(distanceText) · \(rand)"
+                    }()
+                    return PlaceCard(
                         id: p.id,
                         title: p.place_name,
                         categoryName: p.category_name ?? query,
                         link: URL(string: p.place_url ?? ""),
-                        rating: Self.randomRatingText(),         // 3.5~5.0
-                        hoursText: Self.randomHoursText(),       // "hh:mm - hh:mm"
+                        rating: Self.randomRatingText(),
+                        hoursText: hours,
                         statusText: "영업 중"
                     )
                 }
@@ -225,7 +235,7 @@ private struct SafariView: UIViewControllerRepresentable, Identifiable {
     func updateUIViewController(_ vc: SFSafariViewController, context: Context) {}
 }
 
-// 카드 뷰 (투표 버튼 분리)
+// 이미지 카드 뷰
 private struct ImageCardView: View {
     var imageName: String
     var title: String
@@ -239,22 +249,25 @@ private struct ImageCardView: View {
     @State private var isFavorite = false
 
     var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            Image(imageName)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 370, height: 200)
-                .clipped()
-                .cornerRadius(20)
+        ZStack {
+            // 배경 프레임: 연회색 + 라운드 + 얇은 외곽선 + 살짝 그림자
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.gray.opacity(0.15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(Color.black.opacity(0.06), lineWidth: 1)
+                )
+                .shadow(color: .black.opacity(0.06), radius: 6, x: 0, y: 3)
 
-            VStack {
-                HStack {
-                    Text("⭐️ \(rating)")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                        .padding(6)
+            VStack(alignment: .leading, spacing: 8) {
+                // 상단: 평점 배지 + 우상단 하트 버튼(주황 원형)
+                HStack(spacing: 8) {
+                    Text("★ \(rating)")
+                        .font(.caption).bold()
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .foregroundColor(.orange)
                         .background(Color.white)
-                        .cornerRadius(20)
+                        .clipShape(Capsule())
 
                     Spacer()
 
@@ -263,45 +276,63 @@ private struct ImageCardView: View {
                         onVote()
                     } label: {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
-                            .foregroundColor(isFavorite ? .orange : .white)
-                            .padding(6)
-                            .background(Color.white.opacity(0.5))
-                            .clipShape(Circle())
+                            .font(.title3.weight(.semibold))
+                            .foregroundColor(isFavorite ? .orange : .secondary)
+                            .frame(width: 32, height: 32)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .disabled(!isEnabled)
+                    .opacity(isEnabled ? 1 : 0.4)
                 }
-                .padding([.horizontal, .top], 10)
 
-                Spacer()
+                // 가운데: 가게 이름(볼드) + 카테고리(작게, 회색)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(title)
+                        .font(.title3).bold()
+                        .foregroundColor(.black)
+                        .lineLimit(1)
 
-                HStack {
-                    VStack(alignment: .leading) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(title).font(.title).bold().foregroundColor(.black)
-                            Text(category).font(.footnote).foregroundColor(.black)
-                            Spacer()
-                        }
-                        HStack {
-                            Text(status).font(.callout).foregroundColor(.black)
-                            Text(hours).font(.callout).foregroundColor(.black)
-                            Spacer()
-                        }
-                    }
+                    Text(category)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+
                     Spacer()
                 }
-                .padding(10)
-                .background(Color.white.opacity(0.5))
-                .cornerRadius(10)
-                .frame(maxWidth: .infinity, minHeight: 60)
-                .padding([.horizontal, .bottom], 10)
-            }
 
+                // 하단: 영업 상태 + 시간
+                Text("\(status) \(hours)")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+            .padding(.vertical, 18)
+            .padding(.horizontal, 18)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            ZStack {
+                Circle().fill(Color.white)
+                Circle().stroke(Color.black.opacity(0.12), lineWidth: 1)
+                Image(systemName: "arrow.right")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundColor(.black)
+            }
+            .frame(width: 34, height: 34)
+            .padding(.trailing, 14)
+            .padding(.bottom, 10)
+        }
+        // 선택 마감 오버레이
+        .overlay {
             if !isEnabled {
-                ZStack {
-                    Rectangle().fill(Color.gray.opacity(0.8)).cornerRadius(20)
-                    Text("선택 마감").font(.title).foregroundColor(.white)
-                }
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color.black.opacity(0.45))
+                Text("선택 마감")
+                    .font(.headline).bold()
+                    .foregroundColor(.white)
             }
         }
+        .frame(maxWidth: .infinity, minHeight: 120)
     }
 }
 
@@ -318,6 +349,7 @@ struct KakaoKeywordPlace: Decodable, Identifiable {
     let y: String
     let place_url: String?
     let category_name: String?
+    let distance: String?
 }
 
 final class KakaoPlaceService {
@@ -346,6 +378,12 @@ final class KakaoPlaceService {
 }
 
 #Preview {
-    PlaceView()
-        .environmentObject(SearchContext())
+    // 프리뷰 전용 임시 위치/반경 주입
+    let sc = SearchContext()
+    sc.center = CLLocationCoordinate2D(latitude: 37.561, longitude: 126.946)
+    sc.radius = 800 // 0.8km
+    sc.category = "" // 전체 맛집
+    
+    return PlaceView()
+        .environmentObject(sc)
 }
