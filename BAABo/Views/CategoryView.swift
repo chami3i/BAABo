@@ -29,21 +29,28 @@ let sampleCategories : [Category] = [
 // MARK: CategoryView
 struct CategoryView: View {
     @EnvironmentObject var search: SearchContext
+    @EnvironmentObject var router: Router
+    
     @State private var timeRemaining: Int = 30      // 남은 시간 변수 설정(타이머)
     @State private var timerEnded: Bool = false     // 타이머 상태 변수 설정(끝났다면 화면 바꾸기)
     @State private var selectedCategories: [Category] = []      // 사용자가 선택한 카테고리 저장
     @State private var isAllLikedSelected: Bool = false     // 다 좋아 버튼 눌렸는지 여부
-//    @State private var navigateToResult: Bool = false       // CategoryResultView로 전환
+    //    @State private var navigateToResult: Bool = false       // CategoryResultView로 전환
     @State private var showResultPopup: Bool = false        // 결과 팝업 설정(결과 보기 버튼을 눌렀을 경우)
     @State private var moveToPlaceView = false              // PlaceView로 전환
     
+    // 제출/집계 상태
+    @State private var isSubmitting = false
+    @State private var hasSubmitted = false
+    @State private var submitMessage: String? = nil
     
-    let selectedCategory = "아시안" // TODO: 나중에 동적으로 바꾸기
+    // 동적 결과 표시
+    @State private var winnerCategoryName: String? = nil
+    @State private var winnerImageName: String? = nil
+    @State private var scoreBoard: [String:Int] = [:]
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
     let columns = Array(repeating: GridItem(.flexible(), spacing: 16), count: 3)
-    
     
     var body: some View {
         NavigationStack {
@@ -59,7 +66,7 @@ struct CategoryView: View {
                         Spacer()
                         ZStack {    // 타이머
                             Circle()
-                                .fill(timerEnded ? Color("4_silverColor") : Color(.accent))  // 타이머 활성화 여부에 따라 버튼 색 변경
+                                .fill(timerEnded ? Color("4_silverColor") : Color(.orange))  // 타이머 활성화 여부에 따라 버튼 색 변경
                                 .frame(width:35, height:35)
                             Image(systemName: "timer")
                                 .resizable()
@@ -69,7 +76,7 @@ struct CategoryView: View {
                         }
                         Text(String(format:"00:%02d", timeRemaining))   // 남은 시간
                             .font(.system(size: 27, weight: .semibold))
-                            .foregroundColor(timerEnded ? Color("4_silverColor") : Color(.accent))
+                            .foregroundColor(timerEnded ? Color("4_silverColor") : Color(.orange))
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 7)
@@ -85,7 +92,7 @@ struct CategoryView: View {
                         Spacer()
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 20)   // 상단바와 선택버튼 사이 간격 조정
+                    .padding(.bottom, 40)   // 상단바와 선택버튼 사이 간격 조정
                     
                     // MARK: 카테고리 선택 버튼 (정렬)
                     LazyVGrid(columns: columns, spacing:17) {
@@ -145,6 +152,7 @@ struct CategoryView: View {
                             timeRemaining -= 1
                             if timeRemaining == 0 {
                                 timerEnded = true  // 시간 끝났으면 타이머 상태 변수 변경
+                                autoSubmitIfNeeded()
                             }
                         }
                     }
@@ -153,11 +161,11 @@ struct CategoryView: View {
                     
                     // MARK: 결과 보기 버튼
                     Button(action:{
-                        //                    navigateToResult = true
-                        showResultPopup = true
+                        submitVoteAndShowResult()
                     }) {
                         HStack {
-                            Text(timerEnded ? "결과 보기" : String(format: "00:%02d 후 결과 보기", timeRemaining))   // 버튼에서 남은 시간 텍스트로 보여주기
+                            if isSubmitting { ProgressView().tint(.black) }
+                            Text(timerEnded ? "결과 보기" : String(format: "00:%02d 후 결과 보기", timeRemaining))
                             //  .font(.system(size: 30, weight: .bold))
                                 .font(.title2)
                                 .bold()
@@ -169,16 +177,14 @@ struct CategoryView: View {
                         }
                         .foregroundColor(.black)
                         .frame(width: 337, height: 90)
-                        .background(timerEnded ? Color(.accent) : Color("1_grayColor"))
+                        .background(timerEnded ? Color(.orange) : Color("1_grayColor"))
                         .cornerRadius(20)
                         
                     }
-                    .disabled(!timerEnded)  // 타이머 끝나야 버튼 활성화
+                    .disabled(!timerEnded || isSubmitting)  // 타이머 끝나야 버튼 활성화
                 }
                 .padding(.horizontal, 20)   // 전체 화면에서 좌우 여백 조정
                 .navigationBarBackButtonHidden(true)
-                //            .navigationDestination(isPresented: $navigateToResult) {
-                //                CategoryResultView()
                 
                 // MARK: 결과 팝업(CategoryResultView)
                 if showResultPopup {
@@ -192,18 +198,21 @@ struct CategoryView: View {
                             Text("오늘의 메뉴")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.accent)
-                            Image("아시안")
+                            
+                            Image(winnerImageName ?? "아시안")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 131, height: 131)
-                            Text("아시안")
+                            Text(winnerCategoryName ?? "결과 없음")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.accent)
                             
                             // 식당 고르러 가기 버튼
                             Button(action:{
-                                // 선택한 카테고리를 공유 상태에 기록
-                                search.category = selectedCategory
+                                // 집계 결과를 공유 상태에 기록
+                                if let winner = winnerCategoryName {
+                                    search.category = winner
+                                }
                                 moveToPlaceView = true
                             }) {
                                 HStack {
@@ -238,23 +247,95 @@ struct CategoryView: View {
             }
         }
     }
-            // MARK: 카테고리 선택 처리 함수
-            func handleCategoryTap(_ category: Category) {
-                // 다 좋아 버튼 선택 상태에서는 카테고리 선택 불가
-                if isAllLikedSelected {
-                    isAllLikedSelected = false
-                }
-                
-                if selectedCategories.contains(where: { $0.name == category.name }) {
-                    selectedCategories.removeAll{ $0.name == category.name }
-                } else {
-                    if selectedCategories.count < 3 {
-                        selectedCategories.append(category)
+    // MARK: 카테고리 선택 처리 함수
+    func handleCategoryTap(_ category: Category) {
+        // 다 좋아 버튼 선택 상태에서는 카테고리 선택 불가
+        if isAllLikedSelected {
+            isAllLikedSelected = false
+        }
+        
+        if selectedCategories.contains(where: { $0.name == category.name }) {
+            selectedCategories.removeAll{ $0.name == category.name }
+        } else {
+            if selectedCategories.count < 3 {
+                selectedCategories.append(category)
+            }
+        }
+    }
+    
+    // 타이머 0초 시 자동 제출(무응답=기권)
+    private func autoSubmitIfNeeded() {
+        guard !hasSubmitted else { return }
+        submitVote(coreTriggeredByTimer: true)
+    }
+    
+    // 버튼 제출 + 집계/저장 + 팝업
+    private func submitVoteAndShowResult() {
+        submitVote(coreTriggeredByTimer: false)
+    }
+    
+    // 공통 제출 로직
+    private func submitVote(coreTriggeredByTimer: Bool) {
+        guard let roomId = router.currentRoomId else {
+            submitMessage = "방 정보가 없습니다."; return
+        }
+        guard !isSubmitting else { return }
+        isSubmitting = true; submitMessage = nil
+        
+        AuthService.getCurrentUserId { uid in
+            guard let uid = uid else {
+                self.isSubmitting = false
+                self.submitMessage = "로그인이 필요합니다."
+                return
+            }
+            let chosen = self.selectedCategories.map { $0.name }
+            let abstain = self.isAllLikedSelected || chosen.isEmpty   // 무응답/다좋아 = 기권
+            
+            CategoryVoteService.submitVote(roomId: roomId,
+                                           userId: uid,
+                                           categories: chosen,
+                                           abstain: abstain) { ok in
+                DispatchQueue.main.async {
+                    if !ok {
+                        self.isSubmitting = false
+                        self.submitMessage = "제출 실패. 네트워크를 확인해주세요."
+                        return
+                    }
+                    self.hasSubmitted = true
+                    self.submitMessage = coreTriggeredByTimer ? "자동 제출 완료" : "제출 완료!"
+                    
+                    // 제출 후: 전체 집계 + 결과 저장 → 팝업/PlaceView에서 사용 가능
+                    CategoryVoteService.aggregateAndSaveResult(roomId: roomId) { winner, scores in
+                        self.isSubmitting = false
+                        self.scoreBoard = scores
+                        
+                        // 모든 인원이 기권(집계 winner가 없음)이라면 카테고리에서 랜덤 선택
+                        let resolvedWinner: String = {
+                            if let w = winner, !w.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                return w
+                            } else {
+                                let fallback = sampleCategories.randomElement()?.name ?? "아시안"
+                                return fallback
+                            }
+                        }()
+                        
+                        self.winnerCategoryName = resolvedWinner
+                        self.winnerImageName = imageName(for: resolvedWinner)
+                        self.showResultPopup = true
                     }
                 }
             }
         }
-   
+    }
+    
+    // 카테고리명 → 이미지 이름
+    private func imageName(for categoryName: String?) -> String {
+        guard let name = categoryName else { return "아시안" }
+        return sampleCategories.first(where: { $0.name == name })?.imageName ?? "아시안"
+    }
+    
+}
+
 // MARK: CategoryBox
 struct CategoryBox: View {      // 카테고리 선택버튼 (세부설정)
     let category: Category
@@ -286,21 +367,21 @@ struct CategoryBox: View {      // 카테고리 선택버튼 (세부설정)
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(
                             (!isAllLikedSelected && selectionIndex != nil && selectionIndex! < borderColors.count)
-                                        ? borderColors[selectionIndex!]
-                                        : Color.clear,
-                                        lineWidth: 7
-                                    )
+                            ? borderColors[selectionIndex!]
+                            : Color.clear,
+                            lineWidth: 7
                         )
+                )
                 if let selectionIndex = selectionIndex, selectionIndex < 3 {    // 카테고리 우선순위 표시
-                        Text("\(selectionIndex + 1)")
+                    Text("\(selectionIndex + 1)")
                         .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(.black)
-                            .frame(width: 30, height: 30)
-                            .background(borderColors[selectionIndex])
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 1))
-                            .offset(x: -45, y: -45) // 위치 조정
-                    }
+                        .foregroundColor(.black)
+                        .frame(width: 30, height: 30)
+                        .background(borderColors[selectionIndex])
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 1))
+                        .offset(x: -45, y: -45) // 위치 조정
+                }
             }
         }
         .disabled(timerEnded)       // 타이머 끝나면 버튼 비활성화
@@ -310,4 +391,5 @@ struct CategoryBox: View {      // 카테고리 선택버튼 (세부설정)
 #Preview {
     CategoryView()
         .environmentObject(SearchContext())
+        .environmentObject(Router())
 }
