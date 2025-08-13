@@ -1,0 +1,18 @@
+[
+  {
+    "kakaoId": "1234567890",
+    "imageName": "봄식당",
+    "rating": 4.4,
+    "ratingCount": 128,
+    "isOpenNow": true,
+    "todayHours": "오늘 11:00 - 21:00"
+  },
+  {
+    "name": "오뚜기국밥",
+    "imageName": "오뚜기국밥",
+    "rating": 4.2,
+    "ratingCount": 87,
+    "isOpenNow": false,
+    "todayHours": "오늘 휴무"
+  }
+]

@@ -28,6 +28,7 @@ let sampleCategories : [Category] = [
 
 // MARK: CategoryView
 struct CategoryView: View {
+    @EnvironmentObject var search: SearchContext
     @State private var timeRemaining: Int = 30      // 남은 시간 변수 설정(타이머)
     @State private var timerEnded: Bool = false     // 타이머 상태 변수 설정(끝났다면 화면 바꾸기)
     @State private var selectedCategories: [Category] = []      // 사용자가 선택한 카테고리 저장
@@ -201,6 +202,8 @@ struct CategoryView: View {
                             
                             // 식당 고르러 가기 버튼
                             Button(action:{
+                                // 선택한 카테고리를 공유 상태에 기록
+                                search.category = selectedCategory
                                 moveToPlaceView = true
                             }) {
                                 HStack {
@@ -228,7 +231,7 @@ struct CategoryView: View {
                         )
                         .navigationBarBackButtonHidden(true)
                         .navigationDestination(isPresented: $moveToPlaceView) {
-                            PlaceView(category: selectedCategory)
+                            PlaceView()
                         }
                     }
                 }
@@ -306,4 +309,5 @@ struct CategoryBox: View {      // 카테고리 선택버튼 (세부설정)
 
 #Preview {
     CategoryView()
+        .environmentObject(SearchContext())
 }

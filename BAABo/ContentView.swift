@@ -14,51 +14,52 @@ enum Tab {
 }
 
 struct ContentView: View {
-    
+    @EnvironmentObject var router: Router
     @State private var selectedTab: Tab = .home
-    @State private var createdRoomId: String? = nil
-    @State private var isNavigation = false
     
     var body: some View {
         NavigationStack {
-            // Tab
+            
+            // MARK: - TabBar
             ZStack(alignment: .bottom) {
                 
-                // 콘텐츠 영역
-                Group {
-                    switch selectedTab {
-                    case .home:
-                        HomeView()
-                    case .createRoom:
-                        Color.clear
-                            .onAppear {
-                                
-                                selectedTab = .home
-                                
-                                RoomService.createRoom { roomId in
-                                    if let id = roomId {
-                                        self.createdRoomId = id
-                                        self.isNavigation = true
-                                    } else {
-                                        print("방 생성 실패")
+                switch selectedTab {
+                case .home:
+                    HomeView()
+                case .createRoom:
+                    Color.clear
+                        .onAppear {
+                            selectedTab = .home
+                            RoomService.createRoom { roomId in
+                                if let id = roomId {
+                                    DispatchQueue.main.async {
+                                        router.currentRoomId = id
+                                        router.isHost = true
+                                        router.navigateToMapView = true
                                     }
                                 }
                             }
-                    case .myPage:
-                        MypageView()
-                    }
+                        }
+                case .myPage:
+                    MypageView()
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
-                // 커스텀 탭바 (selectedTab: $selectedTab)
                 if selectedTab == .home || selectedTab == .myPage {
                     CustomTabBar(selectedTab: $selectedTab)
                 }
             }
             
-            .navigationDestination(isPresented: .constant(createdRoomId != nil)) {
-                if let roomId = createdRoomId {
+            // 방장
+            .navigationDestination(isPresented: $router.navigateToMapView) {
+                if let roomId = router.currentRoomId {
                     MapView(roomId: roomId)
+                }
+            }
+            
+            // 참가자
+            .navigationDestination(isPresented: $router.navigateToInviteView) {
+                if let roomId = router.currentRoomId {
+                    InviteView(roomCode: roomId, location: router.selectedLocation)
                 }
             }
             

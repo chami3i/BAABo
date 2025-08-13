@@ -7,25 +7,19 @@ struct LocationMarker: Identifiable {
 }
 
 struct MapView: View {
+    @EnvironmentObject var router: Router
+    @EnvironmentObject var search: SearchContext
     @StateObject private var viewModel = MapViewModel()
-    @State private var navigateToInvite = false
-    @State private var selectedLocationName: String = ""   // ✅ 추가
+    @State private var selectedLocationName: String = ""
     
-    private var canConfirm: Bool { !selectedLocationName.isEmpty } // ✅ 추가
+    private var canConfirm: Bool { !selectedLocationName.isEmpty }
     
     let roomId: String
     
     var body: some View {
         NavigationStack {
-            NavigationLink(
-                destination: InviteView(location: selectedLocationName), // ✅ 전달
-                isActive: $navigateToInvite,      // true가 되면 push
-                label: { EmptyView() }
-            )
-            .hidden()
-            
             ZStack {
-                // ✅ 지도 및 중심 원
+                // 지도 및 중심 원
                 ZStack(alignment: .top) {
                     Map(coordinateRegion: $viewModel.region,
                         interactionModes: .all,
@@ -40,6 +34,18 @@ struct MapView: View {
                     }
                         .edgesIgnoringSafeArea(.all)
                         .ignoresSafeArea(.keyboard)
+                    
+                        // 중심 좌표가 바뀔 때마다 공유 상태에 반영
+                        .onChange(of: viewModel.region.center) { _, newCenter in
+                            search.center = newCenter
+                        }
+                        .onAppear {
+                            viewModel.requestLocationAccess()
+                            // 초기 진입 시 현재 지도 중심/반경을 공유 상태에 세팅
+                            search.center = viewModel.region.center
+                            search.radius = Int(viewModel.radiusInMeters)
+                        }
+
                     
                     GeometryReader { geo in
                         let diameter = viewModel.radiusInMeters /
@@ -56,7 +62,7 @@ struct MapView: View {
                     }
                     .allowsHitTesting(false)
                     
-                    // ✅ 검색창 + 자동완성 리스트
+                    // 검색
                     VStack(spacing: 0) {
                         // 검색창
                         HStack {
@@ -82,7 +88,7 @@ struct MapView: View {
                                 VStack(spacing: 0) {
                                     ForEach(viewModel.completions, id: \.self) { item in
                                         Button {
-                                            selectedLocationName = item.title   // ✅ 위치 저장
+                                            selectedLocationName = item.title // 위치 저장
                                             viewModel.searchLocation(from: item)
                                         } label: {
                                             VStack(alignment: .leading) {
@@ -112,33 +118,41 @@ struct MapView: View {
                     .zIndex(10)
                 }
                 .ignoresSafeArea(.keyboard)
-                .onAppear {
-                    viewModel.requestLocationAccess()
-                }
                 
-                // ✅ 하단 고정 슬라이더 + 버튼
+                // 하단 고정 슬라이더 + 버튼
                 VStack {
                     Spacer()
                     VStack(spacing: 10) {
                         HStack {
                             Text("0m")
                             Slider(value: $viewModel.radiusInMeters, in: 0...1000, step: 50)
+                                .onChange(of: viewModel.radiusInMeters) { _, newValue in
+                                    search.radius = Int(newValue)
+                                }
                             Text("1km")
                         }
                         
                         Button("확정") {
+                            // 확정 시, 최종 좌표/반경을 한 번 더 기록(안전)
+                            search.center = viewModel.region.center
+                            search.radius = Int(viewModel.radiusInMeters)
+
                             RoomService.updateRoomLocation(roomId: roomId, location: selectedLocationName) { success in
                                 if success {
-                                    navigateToInvite = true
+                                    DispatchQueue.main.async {
+                                        router.selectedLocation = selectedLocationName
+                                        router.navigateToInviteView = true
+                                        router.navigateToMapView = false
+                                    }
                                 }
                             }
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(canConfirm ? Color.orange : Color.gray.opacity(0.5)) // ✅ 비활성화 색상
+                        .background(canConfirm ? Color.orange : Color.gray.opacity(0.5)) // 비활성화 색상
                         .foregroundColor(.white)
                         .cornerRadius(12)
-                        .disabled(!canConfirm)                                          // ✅ 비활성화 로직
+                        .disabled(!canConfirm)
                         .animation(.default, value: canConfirm)
                     }
                     .padding()
@@ -186,4 +200,5 @@ struct MapView: View {
 
 #Preview {
     MapView(roomId: "dummyRoomId123")
+        .environmentObject(SearchContext())
 }
