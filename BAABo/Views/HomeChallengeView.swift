@@ -32,11 +32,9 @@ struct HomeChallengeView: View {
                                     .frame(width: 100, height: 100)
                                     .shadow(radius: collected[index] ? 4 : 0)
                                 
-                                if collected[index] {
                                     Image(systemName: "star.fill")
                                         .foregroundColor(.white)
                                         .font(.title)
-                                }
                             }
                         }
                         
@@ -51,4 +49,9 @@ struct HomeChallengeView: View {
         }
         
     }
+}
+
+
+#Preview {
+    HomeChallengeView()
 }
