@@ -14,10 +14,6 @@ extension URL: @retroactive Identifiable {
     public var id: String { absoluteString }
 }
 
-#if DEBUG
-private let PREVIEW_FALLBACK = CLLocationCoordinate2D(latitude: 37.561, longitude: 126.946)
-#endif
-
 // 화면에 뿌릴 카드 모델(랜덤 속성 포함)
 private struct PlaceCard: Identifiable {
     let id: String
@@ -148,18 +144,15 @@ struct PlaceView: View {
     }
 
     private func runSearch() {
-        // 좌표는 MapView에서 설정한 값만 사용(프리뷰만 폴백 허용)
-        #if DEBUG
-        let coord = search.center ?? PREVIEW_FALLBACK
-        #else
+        // 좌표는 MapView에서 설정한 값만 사용
         guard let coord = search.center else {
             self.loadError = "검색 위치가 설정되지 않았어요. 지도에서 위치를 먼저 선택해 주세요."
-            self.cards = []; self.isLoading = false
+            self.cards = []
+            self.isLoading = false
             return
         }
-        #endif
 
-        let radius = min(max(search.radius, 1), 20000)
+        let radius = min(max(search.radius, 10), 20000)
         let query = search.category.isEmpty ? "맛집" : search.category
 
         isLoading = true
@@ -173,13 +166,24 @@ struct PlaceView: View {
                 // 무작위 섞고 상위 6개 + 랜덤 속성 부여
                 let randomized = Array(places.shuffled().prefix(6))
                 let mapped = randomized.map { p in
-                    PlaceCard(
+                    let distMeters: String? = p.distance
+                    let distanceText: String = {
+                        if let d = distMeters, let m = Int(d) {
+                            return "\(m)m"
+                        }
+                        return ""
+                    }()
+                    let hours: String = {
+                        let rand = Self.randomHoursText()
+                        return distanceText.isEmpty ? rand : "\(distanceText) · \(rand)"
+                    }()
+                    return PlaceCard(
                         id: p.id,
                         title: p.place_name,
                         categoryName: p.category_name ?? query,
                         link: URL(string: p.place_url ?? ""),
-                        rating: Self.randomRatingText(),         // 3.5~5.0
-                        hoursText: Self.randomHoursText(),       // "hh:mm - hh:mm"
+                        rating: Self.randomRatingText(),
+                        hoursText: hours,
                         statusText: "영업 중"
                     )
                 }
@@ -318,6 +322,7 @@ struct KakaoKeywordPlace: Decodable, Identifiable {
     let y: String
     let place_url: String?
     let category_name: String?
+    let distance: String?
 }
 
 final class KakaoPlaceService {
