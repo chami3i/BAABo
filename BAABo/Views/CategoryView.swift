@@ -85,7 +85,7 @@ struct CategoryView: View {
                         Spacer()
                     }
                     .padding(.horizontal)
-                    .padding(.bottom, 20)   // 상단바와 선택버튼 사이 간격 조정
+                    .padding(.bottom, 40)   // 상단바와 선택버튼 사이 간격 조정
                     
                     // MARK: 카테고리 선택 버튼 (정렬)
                     LazyVGrid(columns: columns, spacing:17) {
