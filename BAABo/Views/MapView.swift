@@ -133,16 +133,40 @@ struct MapView: View {
                         }
                         
                         Button("확정") {
-                            // 확정 시, 최종 좌표/반경을 한 번 더 기록(안전)
-                            search.center = viewModel.region.center
-                            search.radius = Int(viewModel.radiusInMeters)
+                            // 확정 시, 최종 좌표/반경 기록 + 카카오 역지오코딩으로 주소 확정
+                            let center = viewModel.region.center
+                            let radius = Int(viewModel.radiusInMeters)
 
-                            RoomService.updateRoomLocation(roomId: roomId, location: selectedLocationName) { success in
-                                if success {
-                                    DispatchQueue.main.async {
-                                        router.selectedLocation = selectedLocationName
-                                        router.navigateToInviteView = true
-                                        router.navigateToMapView = false
+                            Task {
+                                var finalAddress = selectedLocationName
+                                if finalAddress.isEmpty {
+                                    // 주소를 선택하지 않은 경우, 현재 중심 좌표로 카카오 역지오코딩
+                                    if let addr = try? await KakaoGeoService.shared.reverseGeocode(latitude: center.latitude, longitude: center.longitude) {
+                                        finalAddress = addr
+                                    }
+                                }
+
+                                // 공유 상태 업데이트 (PlaceView가 여기서 center/radius를 사용해 카카오 검색 수행)
+                                await MainActor.run {
+                                    search.center = center
+                                    search.radius = radius
+                                }
+
+                                // 서버에 저장(주소 문자열이 있으면 사용, 없으면 좌표 문자열 전송)
+                                let locationForServer: String
+                                if !finalAddress.isEmpty {
+                                    locationForServer = finalAddress
+                                } else {
+                                    locationForServer = String(format: "%.6f, %.6f", center.latitude, center.longitude)
+                                }
+
+                                RoomService.updateRoomLocation(roomId: roomId, location: locationForServer) { success in
+                                    if success {
+                                        DispatchQueue.main.async {
+                                            router.selectedLocation = finalAddress.isEmpty ? locationForServer : finalAddress
+                                            router.navigateToInviteView = true
+                                            router.navigateToMapView = false
+                                        }
                                     }
                                 }
                             }
@@ -174,6 +198,44 @@ struct MapView: View {
         let earthCircumference = 40_075_000.0
         let metersPerDegree = earthCircumference * cos(centerLat) / 360
         return (span * metersPerDegree) / screenWidth
+    }
+}
+
+// ===== Kakao 역지오코딩 서비스 =====
+private struct KakaoAddressResponse: Decodable {
+    struct Document: Decodable { let address: Address?; let road_address: RoadAddress? }
+    struct Address: Decodable { let address_name: String }
+    struct RoadAddress: Decodable { let address_name: String }
+    let documents: [Document]
+}
+
+final class KakaoGeoService {
+    static let shared = KakaoGeoService(); private init() {}
+
+    func reverseGeocode(latitude lat: Double, longitude lon: Double) async throws -> String? {
+        var comps = URLComponents(string: "https://dapi.kakao.com/v2/local/geo/coord2address.json")!
+        comps.queryItems = [
+            .init(name: "y", value: String(lat)),
+            .init(name: "x", value: String(lon))
+        ]
+        var req = URLRequest(url: comps.url!)
+        let key = AppConfig.kakaoRestAPIKey
+        precondition(!key.isEmpty, "KAKAO_REST_API_KEY is empty. Check Secrets.plist & Target Membership.")
+        req.addValue("KakaoAK \(key)", forHTTPHeaderField: "Authorization")
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
+            return nil
+        }
+        let decoded = try JSONDecoder().decode(KakaoAddressResponse.self, from: data)
+        // 도로명 주소가 있으면 우선 사용, 없으면 지번 주소
+        if let road = decoded.documents.first?.road_address?.address_name {
+            return road
+        }
+        if let lot = decoded.documents.first?.address?.address_name {
+            return lot
+        }
+        return nil
     }
 }
 
