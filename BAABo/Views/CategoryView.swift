@@ -31,7 +31,7 @@ struct CategoryView: View {
     @EnvironmentObject var search: SearchContext
     @EnvironmentObject var router: Router
     
-    @State private var timeRemaining: Int = 30      // 남은 시간 변수 설정(타이머)
+    @State private var timeRemaining: Int = 20      // 남은 시간 변수 설정(타이머)
     @State private var timerEnded: Bool = false     // 타이머 상태 변수 설정(끝났다면 화면 바꾸기)
     @State private var selectedCategories: [Category] = []      // 사용자가 선택한 카테고리 저장
     @State private var isAllLikedSelected: Bool = false     // 다 좋아 버튼 눌렸는지 여부
