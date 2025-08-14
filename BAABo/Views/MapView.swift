@@ -24,7 +24,7 @@ struct MapView: View {
                     Map(coordinateRegion: $viewModel.region,
                         interactionModes: .all,
                         showsUserLocation: true,
-                        userTrackingMode: .constant(.follow),
+                        userTrackingMode: .constant(.none),
                         annotationItems: [LocationMarker(coordinate: viewModel.region.center)]) { item in
                         MapAnnotation(coordinate: item.coordinate) {
                             Circle()
@@ -38,7 +38,6 @@ struct MapView: View {
                         // 중심 좌표가 바뀔 때마다 공유 상태에 반영
                         .onChange(of: viewModel.region.center) { _, newCenter in
                             search.center = newCenter
-                            adjustSpan()
                         }
                         .onAppear {
                             viewModel.requestLocationAccess()
