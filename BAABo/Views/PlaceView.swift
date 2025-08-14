@@ -29,7 +29,7 @@ struct PlaceView: View {
     @EnvironmentObject var search: SearchContext
 
     // 타이머
-    @State private var remainingTime: Int = 10
+    @State private var remainingTime: Int = 120
     @State private var timerActive: Bool = true
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -94,7 +94,7 @@ struct PlaceView: View {
                                 .foregroundColor(.gray)
                         } else {
                             ForEach(cards) { card in
-                                // ✅ 카드 '탭' = 링크 열기(인앱 사파리)
+                                // 카드 '탭' = 링크 열기(인앱 사파리)
                                 Button {
                                     safariURL = card.link
                                 } label: {
@@ -177,43 +177,130 @@ struct PlaceView: View {
             return
         }
 
-        let radius = min(max(search.radius, 10), 20000)
-        let query = search.category.isEmpty ? "맛집" : search.category
+        let radius = min(max(search.radius, 10), 20_000)
+
+        // 카카오 쿼리 매핑 (별칭/동의어 보정)
+        let kakaoQueryMap: [String: String] = [
+            "아시안": "아시아음식",
+            "한식": "한식", "중식": "중식",
+            "일식": "일식", // 일식 내부 키워드까지 보강
+            "양식": "양식", "분식": "분식",
+            "치킨": "치킨", "피자": "피자",
+            "버거": "버거 햄버거",
+            "돈가스": "돈까스",
+            "회": "회"
+        ]
+
+        // 합성 카테고리 분해: '.', ',', '/', '·' 기준 + 트림 + 중복 제거
+        let raw = search.category.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parts: [String] = raw.isEmpty
+            ? []
+            : raw.split(whereSeparator: { ".,/·".contains($0) })
+                 .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+                 .filter { !$0.isEmpty }
+
+        // 최종 쿼리 리스트 (비어 있으면 ["맛집"])
+        let queries: [String] = {
+            if parts.isEmpty { return ["맛집"] }
+            let mapped = parts.map { kakaoQueryMap[$0] ?? $0 }
+            return Array(Set(mapped)) // 중복 제거
+        }()
 
         isLoading = true
         loadError = nil
 
         Task {
             do {
-                let places = try await KakaoPlaceService.shared.search(
-                    query: query, center: coord, radius: radius
-                )
-                // 무작위 섞고 상위 6개 + 랜덤 속성 부여
-                let randomized = Array(places.shuffled().prefix(6))
-                let mapped = randomized.map { p in
+                // 각 쿼리를 병렬 호출하여 결과 모으기
+                var bucket: [KakaoKeywordPlace] = []
+                try await withThrowingTaskGroup(of: [KakaoKeywordPlace].self) { group in
+                    for q in queries {
+                        group.addTask {
+                            try await KakaoPlaceService.shared.search(
+                                query: q, center: coord, radius: radius
+                            )
+                        }
+                    }
+                    for try await res in group {
+                        bucket.append(contentsOf: res)
+                    }
+                }
+
+                // id 기준 dedup
+                var uniq: [String: KakaoKeywordPlace] = [:]
+                for p in bucket { uniq[p.id] = p }
+                var merged = Array(uniq.values)
+
+                // 선택된 카테고리 토큰 기반 후처리 필터 (가게명/카테고리명에 토큰 포함되는 결과만 유지)
+                // parts: 사용자가 선택한 합성 카테고리에서 분해된 원 토큰들 (예: ["족발","보쌈"])
+                let expansionMap: [String: [String]] = [
+                    // 대표/동의어 확장
+                    "일식": ["일식", "스시", "초밥", "라멘", "우동"],
+                    "아시안": ["아시아", "베트남", "쌀국수", "포"],
+                    "버거": ["버거", "햄버거"],
+                    "돈가스": ["돈가스", "돈까스"],
+                    "회": ["회", "횟집", "사시미"],
+                    "족발": ["족발", "족발보쌈"],
+                    "보쌈": ["보쌈", "족발보쌈"],
+                    "치킨": ["치킨"],
+                    "피자": ["피자"],
+                    "분식": ["분식", "떡볶이", "김밥"],
+                    "중식": ["중식", "중화요리", "짜장", "짬뽕"],
+                    "한식": ["한식", "국밥", "백반"],
+                    "양식": ["양식", "스테이크", "파스타"]
+                ]
+                let rawTokens: [String] = parts
+                let expandedTokens: Set<String> = Set(rawTokens.flatMap { expansionMap[$0] ?? [$0] })
+                if !expandedTokens.isEmpty {
+                    merged = merged.filter { p in
+                        let name = p.place_name.lowercased()
+                        let cat = (p.category_name ?? "").replacingOccurrences(of: " ", with: "").lowercased()
+                        // 공백 제거/소문자 비교
+                        return expandedTokens.contains(where: { t in
+                            let t1 = t.lowercased()
+                            let t2 = t.replacingOccurrences(of: " ", with: "").lowercased()
+                            return name.contains(t1) || cat.contains(t2)
+                        })
+                    }
+                }
+
+                // 가까운 순 정렬 (distance 미제공은 뒤로)
+                merged.sort { a, b in
+                    let da = Int(a.distance ?? "") ?? Int.max
+                    let db = Int(b.distance ?? "") ?? Int.max
+                    return da < db
+                }
+
+                // 상위 일부에서 섞어 6개 선택 (너무 먼 곳 섞이는 것 방지)
+                let top = Array(merged.prefix(30))
+                let picked = Array(top.shuffled().prefix(6))
+
+                // 카드 매핑
+                let mappedCards = picked.map { p in
                     let distMeters: String? = p.distance
                     let distanceText: String = {
-                        if let d = distMeters, let m = Int(d) {
-                            return "\(m)m"
-                        }
+                        if let d = distMeters, let m = Int(d) { return "\(m)m" }
                         return ""
                     }()
                     let hours: String = {
                         let rand = Self.randomHoursText()
                         return distanceText.isEmpty ? rand : "\(distanceText) · \(rand)"
                     }()
+                    // 표시용 카테고리는 카카오 응답값 사용 (없으면 첫 쿼리)
+                    let categoryText = p.category_name ?? queries.first ?? "맛집"
                     return PlaceCard(
                         id: p.id,
                         title: p.place_name,
-                        categoryName: p.category_name ?? query,
+                        categoryName: categoryText,
                         link: URL(string: p.place_url ?? ""),
                         rating: Self.randomRatingText(),
                         hoursText: hours,
                         statusText: "영업 중"
                     )
                 }
+
                 await MainActor.run {
-                    self.cards = mapped
+                    self.cards = mappedCards
                     self.isLoading = false
                 }
             } catch {
@@ -398,7 +485,8 @@ final class KakaoPlaceService {
             .init(name: "y", value: String(center.latitude)),
             .init(name: "radius", value: String(radius)),
             .init(name: "size", value: "15"),
-            .init(name: "sort", value: "distance")
+            .init(name: "sort", value: "distance"),
+            .init(name: "category_group_code", value: "FD6") // 음식점 카테고리만
         ]
         var req = URLRequest(url: comps.url!)
         let key = AppConfig.kakaoRestAPIKey
