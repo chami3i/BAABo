@@ -11,7 +11,7 @@ class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate, MKLoc
 
     @Published var searchQuery: String = ""
     @Published var isUserLocationAvailable = false
-    @Published var radiusInMeters: Double = 500
+    @Published var radiusInMeters: Double = 1500
 
     // ✅ 자동완성 관련
     @Published var completions: [MKLocalSearchCompletion] = []

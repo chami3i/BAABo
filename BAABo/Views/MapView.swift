@@ -11,6 +11,7 @@ struct MapView: View {
     @EnvironmentObject var search: SearchContext
     @StateObject private var viewModel = MapViewModel()
     @State private var selectedLocationName: String = ""
+    @State private var recenterRequested = false
     
     private var canConfirm: Bool { !selectedLocationName.isEmpty }
     
@@ -24,7 +25,7 @@ struct MapView: View {
                     Map(coordinateRegion: $viewModel.region,
                         interactionModes: .all,
                         showsUserLocation: true,
-                        userTrackingMode: .constant(.follow),
+                        userTrackingMode: .constant(.none),
                         annotationItems: [LocationMarker(coordinate: viewModel.region.center)]) { item in
                         MapAnnotation(coordinate: item.coordinate) {
                             Circle()
@@ -38,12 +39,24 @@ struct MapView: View {
                         // 중심 좌표가 바뀔 때마다 공유 상태에 반영
                         .onChange(of: viewModel.region.center) { _, newCenter in
                             search.center = newCenter
+                            if recenterRequested {
+                                adjustSpan()
+                                recenterRequested = false
+                            }
                         }
                         .onAppear {
                             viewModel.requestLocationAccess()
                             // 초기 진입 시 현재 지도 중심/반경을 공유 상태에 세팅
+                            viewModel.radiusInMeters = 1500
                             search.center = viewModel.region.center
                             search.radius = Int(viewModel.radiusInMeters)
+                            
+                            // Adjust region span to fit radius with padding
+                            adjustSpan()
+                        }
+                        .onChange(of: viewModel.radiusInMeters) { _, newValue in
+                            let _ = newValue // keep parameter used
+                            adjustSpan()
                         }
 
                     
@@ -71,6 +84,7 @@ struct MapView: View {
                                 .padding(12)
                             
                             Button(action: {
+                                recenterRequested = true
                                 viewModel.searchLocation()
                             }) {
                                 Image(systemName: "magnifyingglass")
@@ -89,6 +103,7 @@ struct MapView: View {
                                     ForEach(viewModel.completions, id: \.self) { item in
                                         Button {
                                             selectedLocationName = item.title // 위치 저장
+                                            recenterRequested = true
                                             viewModel.searchLocation(from: item)
                                         } label: {
                                             VStack(alignment: .leading) {
@@ -125,14 +140,14 @@ struct MapView: View {
                     VStack(spacing: 10) {
                         HStack {
                             Text("0m")
-                            Slider(value: $viewModel.radiusInMeters, in: 0...1000, step: 50)
+                            Slider(value: $viewModel.radiusInMeters, in: 0...3000, step: 50)
                                 .onChange(of: viewModel.radiusInMeters) { _, newValue in
                                     search.radius = Int(newValue)
                                 }
-                            Text("1km")
+                            Text("3km")
                         }
                         
-                        Button("확정") {
+                        Button(action: {
                             // 확정 시, 최종 좌표/반경 기록 + 카카오 역지오코딩으로 주소 확정
                             let center = viewModel.region.center
                             let radius = Int(viewModel.radiusInMeters)
@@ -170,13 +185,19 @@ struct MapView: View {
                                     }
                                 }
                             }
+                        }) {
+                            // ✅ 라벨 영역 전체가 터치 영역이 되도록 구성
+                            Text("확정")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(canConfirm ? Color.orange : Color.gray.opacity(0.5))
+                                .cornerRadius(12)
+                                .contentShape(Rectangle())
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(canConfirm ? Color.orange : Color.gray.opacity(0.5)) // 비활성화 색상
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .buttonStyle(.plain)
                         .disabled(!canConfirm)
+                        .allowsHitTesting(canConfirm)
                         .animation(.default, value: canConfirm)
                     }
                     .padding()
@@ -198,6 +219,17 @@ struct MapView: View {
         let earthCircumference = 40_075_000.0
         let metersPerDegree = earthCircumference * cos(centerLat) / 360
         return (span * metersPerDegree) / screenWidth
+    }
+    
+    private func adjustSpan() {
+        let earthCircumference = 40_075_000.0
+        let centerLat = viewModel.region.center.latitude * .pi / 180
+        let metersPerDegreeLon = earthCircumference * cos(centerLat) / 360
+        let paddingFactor = 1.1 // tighter view
+        let zoomTightness = 0.9 // additional zoom-in (smaller => more zoom)
+        let diameterMeters = viewModel.radiusInMeters * 2 * paddingFactor
+        let deltaDeg = (diameterMeters / metersPerDegreeLon) * zoomTightness
+        viewModel.region.span = MKCoordinateSpan(latitudeDelta: deltaDeg, longitudeDelta: deltaDeg)
     }
 }
 
